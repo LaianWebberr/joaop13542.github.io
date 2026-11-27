@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pra você</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,600&family=Figtree:wght@400;500&display=swap">
+<style>
+:root{--noite:#140f2b;--noite2:#251a4a;--rosa:#f4a6b8;--rosa2:#ff6f91;--ouro:#f2d49b;--texto:#f6eef5;--suave:#c9bcd8;
+color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none!important}
+#aviso{position:fixed;left:50%;bottom:22px;translate:-50% 0;z-index:30;max-width:90vw;background:var(--noite2);border:1px solid var(--suave);border-radius:14px;padding:12px 18px;text-align:center}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;--cx-sky-background:radial-gradient(120% 80% at 50% 0%,var(--noite2),var(--noite) 70%);color:var(--texto);font:400 17px/1.6 Figtree,system-ui,sans-serif;overflow-x:hidden}
+canvas#ceu{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+section{position:relative;z-index:1;min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:48px 24px}
+h1,h2,.serif{font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;font-weight:600;margin:0}
+h1{font-size:clamp(3rem,13vw,6.5rem);line-height:1;color:var(--rosa)}
+h2{font-size:clamp(1.8rem,6vw,2.8rem);line-height:1.15;color:var(--ouro)}
+p{max-width:34ch;margin:0}
+.suave{color:var(--suave)}
+button{font:inherit;cursor:pointer;border:0;border-radius:999px;padding:14px 30px;color:#2a0f24;background:var(--rosa);transition:transform .15s,background .2s}
+button:hover{background:var(--ouro)}button:active{transform:scale(.96)}
+button:focus-visible{outline:3px solid var(--ouro);outline-offset:3px}
+button.ghost{background:transparent;color:var(--texto);border:1px solid var(--suave)}
+
+/* envelope */
+#abertura{position:fixed;inset:0;z-index:10;background:var(--noite);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;transition:opacity 1s,visibility 1s}
+#abertura.some{opacity:0;visibility:hidden}
+.env{position:relative;width:min(78vw,320px);aspect-ratio:3/2;background:#3a2a66;border-radius:8px;box-shadow:0 20px 60px #0008;cursor:pointer}
+.env::before{content:"";position:absolute;inset:0;border-radius:8px;background:linear-gradient(160deg,transparent 49.5%,#2e2054 50%) bottom/100% 55% no-repeat,linear-gradient(200deg,transparent 49.5%,#33245c 50%) bottom/100% 55% no-repeat}
+.aba{position:absolute;left:0;right:0;top:0;height:58%;background:#463380;clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:top;transition:transform .8s;border-radius:8px 8px 0 0}
+.lacre{position:absolute;left:50%;top:50%;translate:-50% -50%;width:46px;height:46px;border-radius:50%;background:var(--rosa2);display:grid;place-items:center;font-size:22px;z-index:2;animation:bate 1.6s infinite;transition:opacity .4s}
+.env.aberto .aba{transform:rotateX(180deg)}
+.env.aberto .lacre{opacity:0}
+@keyframes bate{50%{transform:scale(1.15)}}
+
+/* contador */
+.contador{display:flex;gap:14px;margin:28px 0 8px}
+.contador div{min-width:62px}
+.contador b{display:block;font:600 2.4rem/1 "Cormorant Garamond",Georgia,serif;color:var(--ouro);font-variant-numeric:tabular-nums}
+.contador small{color:var(--suave);font-size:.8rem}
+
+/* motivos */
+.cartao{width:min(88vw,380px);min-height:230px;padding:34px 28px;border-radius:24px;background:linear-gradient(160deg,#ffffff14,#ffffff06);border:1px solid #ffffff22;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin:26px 0 22px;transition:opacity .25s,transform .25s}
+.cartao.troca{opacity:0;transform:translateY(8px)}
+.cartao.serif{font-weight:500}
+
+/* carta */
+.carta{max-width:34ch}
+.carta p{max-width:none;margin:0 0 1.1em;font-size:1.12rem}
+.assina{font:italic 600 2rem "Cormorant Garamond",Georgia,serif;color:var(--rosa)}
+
+#feliz{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;margin-top:10px}
+#feliz[hidden]{display:none}
+.lista{text-align:left;margin:34px 0 0;padding-left:1.6em}
+.lista li{margin:0 0 .9em;padding-left:.3em}
+.lista li::marker{color:var(--rosa)}
+#cantinho{justify-content:flex-start;padding-top:72px}
+.abas{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:22px 0}
+.abas button{background:transparent;color:var(--texto);border:1px solid var(--suave);padding:10px 18px}
+.abas button.ativa{background:var(--rosa);color:#2a0f24;border-color:var(--rosa)}
+.painel{width:100%;max-width:420px;text-align:left}
+.painel[hidden]{display:none}
+.item{display:block;background:#ffffff10;border:1px solid #ffffff22;border-radius:16px;padding:16px 18px;margin:0 0 12px}
+label.item{display:flex;gap:12px;align-items:center}
+.item h3{margin:0 0 4px;font:600 1.3rem "Cormorant Garamond",Georgia,serif;color:var(--ouro)}
+.item p{max-width:none;white-space:pre-wrap}
+.painel input,.painel textarea{width:100%;font:inherit;padding:10px 12px;border-radius:12px;border:1px solid var(--suave);background:#0004;color:var(--texto);margin:0 0 8px}
+.painel button{margin:0 6px 8px 0}
+.item{position:relative}
+.painel .acoes{position:absolute;top:8px;right:10px;display:flex;gap:2px}
+.painel .acoes button{background:none;border:0;padding:6px;margin:0;font-size:1.05rem;line-height:1;cursor:pointer}
+.painel .lixeira-btn{width:28px;height:28px;padding:0;margin:0;border-radius:8px;background:#ffffff12;border:1px solid #ffffff2b;color:var(--suave);display:inline-grid;place-items:center;flex:0 0 28px;transition:background .15s,color .15s,border-color .15s,transform .12s}
+.painel .lixeira-btn:hover{background:#ff6f9126;border-color:var(--rosa2);color:var(--rosa2)}
+.painel .lixeira-btn svg{width:15px;height:15px;pointer-events:none}
+.painel .confirm-apagar{display:inline-flex;align-items:center;gap:6px;margin-left:auto}
+.painel .confirm-apagar button{padding:5px 10px;margin:0;font-size:.82rem;border-radius:8px}
+.item h3{padding-right:76px}
+.edit{display:none;margin-top:18px;padding-top:16px;border-top:1px dashed var(--suave)}
+body.editando .edit{display:block}
+#secCarta{overflow:hidden}
+.carta p{text-shadow:0 0 8px #140f2b,0 0 3px #140f2b}
+.jardim{position:absolute;inset:0;z-index:0;pointer-events:none}
+.jardim span{position:absolute;line-height:1;user-select:none}
+.cartaLinha{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:18px}
+@media (min-width:820px){.buque{position:absolute;left:100%;top:50%;translate:0 -50%;margin-left:34px}}
+.buque{background:none;border:0;padding:8px;font-size:5.5rem;line-height:1;transform-origin:50% 90%;animation:balanca 3.2s ease-in-out infinite;filter:drop-shadow(0 8px 18px #ff6f9155)}
+.buque:hover{background:none}
+.buque:active{animation-play-state:paused;scale:.9}
+@keyframes balanca{0%,100%{transform:rotate(4deg)}50%{transform:rotate(-5deg)}}
+/* final */
+.botoes{display:flex;gap:16px;margin-top:30px;min-height:56px;align-items:center;justify-content:center;flex-wrap:wrap}
+.cora{position:fixed;bottom:-30px;z-index:5;pointer-events:none;animation:sobe linear forwards}
+@keyframes sobe{to{transform:translateY(-115vh) rotate(25deg);opacity:0}}
+@media (prefers-reduced-motion:reduce){.lacre{animation:none}.cora{display:none}*{transition:none!important}}
+
+/* ===== tema céu: sol, lua, original e eclipse ===== */
+body::before,body::after{content:"";position:fixed;pointer-events:none;z-index:0;transition:opacity .6s ease,transform .8s ease,filter .6s ease,background .6s ease,box-shadow .6s ease;opacity:0}
+body.cx-sky-original{--cx-sky-background:radial-gradient(120% 80% at 50% 0%,var(--noite2),var(--noite) 70%)}
+body.cx-sky-original canvas#ceu{opacity:1}
+body.cx-sky-moon{--cx-sky-background:radial-gradient(120% 80% at 50% 0%,var(--noite2),var(--noite) 70%)}
+body.cx-sky-moon::before{opacity:1;top:86px;right:10vw;width:112px;height:112px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#fffefb 0 22%,#f0e9ff 55%,#d9cff8 100%);box-shadow:0 0 16px rgba(255,248,236,.18),0 0 65px rgba(204,196,255,.16)}
+body.cx-sky-moon::after{opacity:.26;inset:-12% -8%;background:radial-gradient(32% 26% at 78% 20%,rgba(248,244,255,.14),transparent 70%)}
+body.cx-sky-moon canvas#ceu{opacity:1}
+body.cx-sky-eclipse{--cx-sky-background:radial-gradient(140% 105% at 50% 0%,#443171 0%,#1f153f 43%,#09070f 100%)}
+body.cx-sky-eclipse::before{opacity:1;top:72px;left:50%;transform:translateX(-50%);width:190px;height:190px;border-radius:50%;background:radial-gradient(circle at center,#050507 0 30%,transparent 31%),radial-gradient(circle at center,rgba(255,243,203,.98) 0 36%,rgba(255,179,84,.95) 45%,rgba(255,124,54,.72) 56%,rgba(255,228,160,.18) 68%,rgba(255,228,160,0) 74%);box-shadow:0 0 18px rgba(255,210,131,.38),0 0 78px rgba(255,144,73,.24)}
+body.cx-sky-eclipse::after{opacity:1;inset:0;background:radial-gradient(circle at 50% 14%,rgba(255,176,92,.12),transparent 24%),radial-gradient(circle at 50% 35%,rgba(255,255,255,.035),transparent 48%)}
+body.cx-sky-eclipse canvas#ceu{opacity:.78}
+body.cx-sky-eclipse h1,body.cx-sky-eclipse h2,body.cx-sky-eclipse .serif{text-shadow:0 0 18px rgba(255,176,92,.08)}
+@media (max-width:700px){body.cx-sky-moon::before{width:82px;height:82px;top:94px;right:7vw}body.cx-sky-eclipse::before{width:132px;height:132px;top:92px}}
+
+</style>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyDAXpFJafiXGNyOwU_5B0CRGwa5hYbXAQ",
+  authDomain: "cantinho-sarah.firebaseapp.com",
+  projectId: "cantinho-sarah",
+  storageBucket: "cantinho-sarah.firebasestorage.app",
+  messagingSenderId: "705673397820",
+  appId: "1:705673397820:web:f754f7eb9974dacfe5a539"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+window.firebase_salvarDados = async d => { await setDoc(doc(db, "site", "conteudoPrincipal"), { dados: JSON.stringify(d) }); };
+window.firebase_carregarDados = async () => {
+  try {
+    const snap = await getDoc(doc(db, "site", "conteudoPrincipal"));
+    if (snap.exists() && snap.data().dados) { D = Object.assign(D, JSON.parse(snap.data().dados)); desenhaTudo(); }
+  } catch (err) { console.log("Erro ao carregar dados do Firebase", err); }
+};
+window.firebase_carregarDados();
+</script>
+
+<!-- cantinho-extra: estilos -->
+<style id="cantinho-extra-v3-css">
+/* Extensão visual: herda as cores e tipografia do site original. */
+.cx-panel{max-width:520px!important;text-align:left}.cx-panel h3{padding-right:0}.cx-panel .item{overflow-wrap:anywhere}.cx-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}.cx-header p{margin:0;max-width:35ch}.cx-panel button,.cx-modal button,.cx-day button{font-size:.87rem;padding:9px 15px}.cx-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}.cx-toolbar button{margin:0}.cx-form{margin:14px 0 20px;padding:16px;border:1px solid #ffffff25;border-radius:16px;background:#ffffff08}.cx-form label{display:block;color:var(--suave);font-size:.83rem;margin-bottom:5px}.cx-form input,.cx-form textarea{margin-bottom:12px}.cx-form input[type=file]{padding:8px;font-size:.85rem}.cx-form textarea{resize:vertical;min-height:75px}.cx-status{font-size:.8rem;color:var(--suave);text-align:center;margin:6px auto 14px;max-width:40ch}.cx-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 13px;padding:8px 4px 20px}.cx-photo{margin:0;min-width:0;padding:9px 9px 12px;background:#f4e8eb;color:#443045;border-radius:4px;box-shadow:0 8px 20px #0005;transform:rotate(-2deg);transition:transform .2s}.cx-photo:nth-child(even){transform:rotate(2deg);background:#f6ecdd}.cx-photo:hover,.cx-photo:focus-within{transform:rotate(0)}.cx-photo-open{display:block!important;border:0!important;background:transparent!important;padding:0!important;margin:0!important;width:100%;border-radius:2px!important;overflow:hidden}.cx-photo img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;background:#c4b3c8}.cx-photo figcaption{text-align:center;line-height:1.15;margin:10px 0 4px;font:600 1.2rem 'Cormorant Garamond',Georgia,serif;overflow-wrap:anywhere}.cx-photo small{display:block;text-align:center;font-size:.7rem;opacity:.75}.cx-photo .cx-card-actions{justify-content:center;margin-top:9px}.cx-photo .cx-card-actions button{color:#64455b;border:1px solid #64455b55;background:transparent;font-size:.7rem;padding:4px 8px;margin:0}.cx-card-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}.cx-card-actions button{margin:0}.cx-timeline{position:relative;padding-left:24px;margin:18px 0}.cx-timeline:before{content:'';position:absolute;left:8px;top:12px;bottom:10px;width:1px;background:linear-gradient(var(--rosa),var(--ouro),#ffffff15)}.cx-event{position:relative}.cx-event:before{content:'♥';position:absolute;left:-24px;top:14px;width:18px;height:18px;border-radius:50%;background:var(--noite2);color:var(--rosa);font-size:11px;line-height:18px;text-align:center;box-shadow:0 0 12px #ff6f9140}.cx-date{font-size:.8rem;color:var(--rosa);margin-bottom:5px;letter-spacing:.02em}.cx-event p,.cx-surprise p{white-space:pre-wrap;max-width:none}.cx-place{font-size:.82rem;color:var(--suave);margin-top:8px!important}.cx-day{border:1px solid #ffffff20;border-radius:17px;background:#ffffff09;padding:13px 20px;margin:22px auto 0;max-width:min(360px,100%);text-align:center}.cx-day small{color:var(--ouro);font-size:.8rem}.cx-day p{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:1.25rem;line-height:1.25;margin:8px auto 0}.cx-theme{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:18px;color:var(--suave);font-size:.8rem;flex-wrap:wrap}.cx-theme select{color:var(--texto);background:var(--noite2);border:1px solid #ffffff35;padding:6px 9px;border-radius:9px;font:inherit}.cx-theme-day{--noite:#20172d;--noite2:#392b43;--ouro:#f6d7a5;--rosa:#f4afbb}.cx-theme-night{--noite:#100e28;--noite2:#251b49;--ouro:#f1d5a8;--rosa:#f4a6c3}.cx-modal{position:fixed;inset:0;z-index:50;background:#100b22eF;display:grid;place-items:center;padding:18px;overflow:auto}.cx-modal-box{width:min(500px,100%);max-height:90vh;overflow:auto;border:1px solid #ffffff2a;border-radius:22px;padding:20px;background:var(--noite2);text-align:center;box-shadow:0 20px 70px #0008}.cx-modal-box h2{margin:12px 0}.cx-modal-box p{max-width:none;margin:8px auto;white-space:pre-wrap}.cx-modal-box img{display:block;max-height:58vh;max-width:100%;width:auto;margin:0 auto;border:8px solid #f6eaf0;border-radius:6px;object-fit:contain}.cx-modal-actions{display:flex;justify-content:center;gap:12px;align-items:center;margin-top:15px;flex-wrap:wrap}.cx-close{float:right}.cx-celebrate-icon{font-size:3.5rem;line-height:1.2;animation:cx-pulse 1.5s ease-in-out infinite}.cx-confetti{position:fixed;pointer-events:none;z-index:51;top:-40px;animation:cx-fall 3.4s linear forwards;font-size:1.25rem}@keyframes cx-fall{to{transform:translateY(115vh) rotate(400deg);opacity:0}}@keyframes cx-pulse{50%{transform:scale(1.12)}}.cx-surprise-ready{border-color:#f4a6b86a!important}.cx-empty{padding:23px 16px;text-align:center;color:var(--suave);border:1px dashed #ffffff2b;border-radius:16px;max-width:none!important}.cx-sync{font-size:.8rem;color:var(--suave);text-align:center;margin:10px auto;max-width:42ch}.cx-sync button{font:inherit;padding:6px 10px;margin:6px}.cx-error{color:var(--rosa);font-size:.84rem;margin:8px 0;max-width:none!important}@media(max-width:340px){.cx-grid{grid-template-columns:1fr}.cx-photo{max-width:230px;margin:auto;width:100%}}@media(prefers-reduced-motion:reduce){.cx-celebrate-icon,.cx-confetti{animation:none}.cx-confetti{display:none}.cx-photo{transform:none}}
+
+
+/* ===== tema céu: sol, lua, original e eclipse ===== */
+body::before,body::after{content:"";position:fixed;pointer-events:none;z-index:0;transition:opacity .6s ease,transform .8s ease,filter .6s ease,background .6s ease,box-shadow .6s ease;opacity:0}
+body.cx-sky-original{--cx-sky-background:radial-gradient(120% 80% at 50% 0%,var(--noite2),var(--noite) 70%)}
+body.cx-sky-original canvas#ceu{opacity:1}
+body.cx-sky-moon{--cx-sky-background:radial-gradient(120% 80% at 50% 0%,var(--noite2),var(--noite) 70%)}
+body.cx-sky-moon::before{opacity:1;top:86px;right:10vw;width:112px;height:112px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#fffefb 0 22%,#f0e9ff 55%,#d9cff8 100%);box-shadow:0 0 16px rgba(255,248,236,.18),0 0 65px rgba(204,196,255,.16)}
+body.cx-sky-moon::after{opacity:.26;inset:-12% -8%;background:radial-gradient(32% 26% at 78% 20%,rgba(248,244,255,.14),transparent 70%)}
+body.cx-sky-moon canvas#ceu{opacity:1}
+body.cx-sky-eclipse{--cx-sky-background:radial-gradient(140% 105% at 50% 0%,#443171 0%,#1f153f 43%,#09070f 100%)}
+body.cx-sky-eclipse::before{opacity:1;top:72px;left:50%;transform:translateX(-50%);width:190px;height:190px;border-radius:50%;background:radial-gradient(circle at center,#050507 0 30%,transparent 31%),radial-gradient(circle at center,rgba(255,243,203,.98) 0 36%,rgba(255,179,84,.95) 45%,rgba(255,124,54,.72) 56%,rgba(255,228,160,.18) 68%,rgba(255,228,160,0) 74%);box-shadow:0 0 18px rgba(255,210,131,.38),0 0 78px rgba(255,144,73,.24)}
+body.cx-sky-eclipse::after{opacity:1;inset:0;background:radial-gradient(circle at 50% 14%,rgba(255,176,92,.12),transparent 24%),radial-gradient(circle at 50% 35%,rgba(255,255,255,.035),transparent 48%)}
+body.cx-sky-eclipse canvas#ceu{opacity:.78}
+body.cx-sky-eclipse h1,body.cx-sky-eclipse h2,body.cx-sky-eclipse .serif{text-shadow:0 0 18px rgba(255,176,92,.08)}
+@media (max-width:700px){body.cx-sky-moon::before{width:82px;height:82px;top:94px;right:7vw}body.cx-sky-eclipse::before{width:132px;height:132px;top:92px}}
+
+
+/* Sol — céu claro, com contraste próprio e superfícies suaves. */
+body.cx-sky-sun{
+  color-scheme:light;
+  --noite:#dceffa;--noite2:#f3faff;--texto:#182e48;--suave:#263e58;
+  --ouro:#54360f;--rosa:#68233f;--rosa2:#b94b73;--cx-sky-background:#85b2d0;
+}
+html[data-cx-theme="sun"]{color-scheme:light;background:#85b2d0}
+body.cx-sky-sun::before{opacity:0;inset:auto;width:0;height:0;box-shadow:none}
+body.cx-sky-sun::after{opacity:1;inset:0;filter:none;background: center / cover no-repeat url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201440%20900%22%20preserveAspectRatio%3D%22xMidYMid%20slice%22%3E%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22sky%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%22.22%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%236196c6%22%2F%3E%3Cstop%20offset%3D%22.43%22%20stop-color%3D%22%2385b2d0%22%2F%3E%3Cstop%20offset%3D%22.8%22%20stop-color%3D%22%23a9c1d0%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23d1c2b5%22%2F%3E%3C%2FlinearGradient%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22light%22%3E%3Cstop%20stop-color%3D%22%23ffe7b4%22%20stop-opacity%3D%22.49%22%2F%3E%3Cstop%20offset%3D%22.52%22%20stop-color%3D%22%23ffe9c9%22%20stop-opacity%3D%22.15%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ffe9c9%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22halo%22%3E%3Cstop%20stop-color%3D%22%23fff2c4%22%20stop-opacity%3D%22.86%22%2F%3E%3Cstop%20offset%3D%22.32%22%20stop-color%3D%22%23ffdf97%22%20stop-opacity%3D%22.55%22%2F%3E%3Cstop%20offset%3D%22.72%22%20stop-color%3D%22%23ffdf97%22%20stop-opacity%3D%22.13%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ffdf97%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22sun%22%20cx%3D%22.36%22%20cy%3D%22.28%22%20r%3D%22.82%22%3E%3Cstop%20stop-color%3D%22%23fff8d7%22%2F%3E%3Cstop%20offset%3D%22.55%22%20stop-color%3D%22%23ffe4a3%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23eebc68%22%2F%3E%3C%2FradialGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22cloud%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%22.14%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23fef7eb%22%2F%3E%3Cstop%20offset%3D%22.48%22%20stop-color%3D%22%23e6edf0%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23a6bccd%22%2F%3E%3C%2FlinearGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22cloud2%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23f2eee9%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23a4bbcf%22%2F%3E%3C%2FlinearGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22veil%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23d9e4eb%22%20stop-opacity%3D%220%22%2F%3E%3Cstop%20offset%3D%22.6%22%20stop-color%3D%22%23d9e4eb%22%20stop-opacity%3D%22.16%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23e4cfbc%22%20stop-opacity%3D%22.26%22%2F%3E%3C%2FlinearGradient%3E%0A%20%20%20%20%3Cfilter%20id%3D%22soft%22%20x%3D%22-20%25%22%20y%3D%22-50%25%22%20width%3D%22140%25%22%20height%3D%22200%25%22%3E%3CfeGaussianBlur%20stdDeviation%3D%2210%22%2F%3E%3C%2Ffilter%3E%0A%20%20%20%20%3Cfilter%20id%3D%22haze%22%20x%3D%22-20%25%22%20y%3D%22-50%25%22%20width%3D%22140%25%22%20height%3D%22200%25%22%3E%3CfeGaussianBlur%20stdDeviation%3D%2222%22%2F%3E%3C%2Ffilter%3E%0A%20%20%20%20%3Cg%20id%3D%22cloudA%22%3E%3Cpath%20fill%3D%22url%28%23cloud%29%22%20d%3D%22M-28%20116C8%2094%2047%20105%2073%2087C70%2063%2094%2045%20123%2048C137%2015%20165%201%20195%2012C217%202%20248%2016%20257%2039C291%2019%20326%2038%20338%2062C365%2051%20390%2067%20401%2083C445%2069%20473%2092%20473%20109C525%20109%20551%20126%20574%20147L-28%20147Z%22%2F%3E%3Cpath%20fill%3D%22%23f9f1e4%22%20opacity%3D%22.5%22%20d%3D%22M74%2087Q95%2064%20127%2067Q148%2025%20186%2029Q218%2017%20241%2046Q273%2048%20286%2069Q317%2052%20339%2077Q358%2066%20383%2083Q341%2079%20310%20100Q282%2081%20251%2094Q201%2067%20161%2097Q114%2078%2074%2087Z%22%2F%3E%3Cpath%20fill%3D%22%23769bb9%22%20opacity%3D%22.21%22%20d%3D%22M-10%20125Q81%20100%20145%20116T274%20112T390%20113T550%20134L550%20149H-10Z%22%2F%3E%3C%2Fg%3E%0A%20%20%20%20%3Cg%20id%3D%22cloudB%22%3E%3Cpath%20fill%3D%22url%28%23cloud2%29%22%20d%3D%22M-15%2088Q24%2071%2057%2074Q63%2049%2093%2049Q104%2019%20137%2023Q157%203%20186%2018Q212%2020%20221%2047Q254%2033%20269%2061Q301%2048%20316%2074Q358%2075%20384%20100H-15Z%22%2F%3E%3Cpath%20fill%3D%22%23fff5e9%22%20opacity%3D%22.38%22%20d%3D%22M55%2074Q74%2057%2099%2065Q117%2029%20150%2039Q175%2016%20195%2040Q213%2042%20221%2058Q176%2052%20150%2068Q119%2051%2091%2078Z%22%2F%3E%3C%2Fg%3E%0A%20%20%20%20%3C%2Fdefs%3E%3Crect%20width%3D%221440%22%20height%3D%22900%22%20fill%3D%22url%28%23sky%29%22%2F%3E%3Cellipse%20cx%3D%221180%22%20cy%3D%22150%22%20rx%3D%22792.0000000000001%22%20ry%3D%22432.0%22%20fill%3D%22url%28%23light%29%22%2F%3E%3Cg%20opacity%3D%220.33%22%20transform%3D%22translate%28-105%20105%29%20scale%281.12%201.12%29%22%20filter%3D%22url%28%23soft%29%22%3E%3Cuse%20href%3D%22%23cloudB%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.28%22%20transform%3D%22translate%281510%20345%29%20scale%28-0.85%200.85%29%22%20filter%3D%22url%28%23soft%29%22%3E%3Cuse%20href%3D%22%23cloudA%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.24%22%20transform%3D%22translate%28100%20510%29%20scale%280.88%200.88%29%22%20filter%3D%22url%28%23soft%29%22%3E%3Cuse%20href%3D%22%23cloudB%22%2F%3E%3C%2Fg%3E%3Ccircle%20cx%3D%221180%22%20cy%3D%22150%22%20r%3D%22244.20000000000002%22%20fill%3D%22url%28%23halo%29%22%2F%3E%3Ccircle%20cx%3D%221180%22%20cy%3D%22150%22%20r%3D%2277%22%20fill%3D%22none%22%20stroke%3D%22%23fff0c8%22%20stroke-opacity%3D%22.20%22%20stroke-width%3D%221%22%2F%3E%3Ccircle%20cx%3D%221180%22%20cy%3D%22150%22%20r%3D%2266%22%20fill%3D%22url%28%23sun%29%22%20stroke%3D%22%23ffe9ad%22%20stroke-width%3D%221.5%22%2F%3E%3Cg%20opacity%3D%220.7%22%20transform%3D%22translate%28-115%20180%29%20scale%280.92%200.92%29%22%3E%3Cuse%20href%3D%22%23cloudA%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.59%22%20transform%3D%22translate%281490%20300%29%20scale%28-0.83%200.83%29%22%3E%3Cuse%20href%3D%22%23cloudB%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.48%22%20transform%3D%22translate%28-145%20575%29%20scale%281.12%201.12%29%22%3E%3Cuse%20href%3D%22%23cloudB%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.55%22%20transform%3D%22translate%281550%20665%29%20scale%28-0.9%200.9%29%22%3E%3Cuse%20href%3D%22%23cloudA%22%2F%3E%3C%2Fg%3E%3Cpath%20transform%3D%22translate%28270%20365%29%20scale%281%29%22%20d%3D%22M-12%200Q-6%20-7%200%201Q6%20-7%2012%200%22%20fill%3D%22none%22%20stroke%3D%22%23456988%22%20stroke-opacity%3D%22.59%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20transform%3D%22translate%28300%20349%29%20scale%280.78%29%22%20d%3D%22M-12%200Q-6%20-7%200%201Q6%20-7%2012%200%22%20fill%3D%22none%22%20stroke%3D%22%23456988%22%20stroke-opacity%3D%22.59%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20transform%3D%22translate%28323%20367%29%20scale%280.62%29%22%20d%3D%22M-12%200Q-6%20-7%200%201Q6%20-7%2012%200%22%20fill%3D%22none%22%20stroke%3D%22%23456988%22%20stroke-opacity%3D%22.59%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20transform%3D%22translate%281100%20480%29%20scale%280.65%29%22%20d%3D%22M-12%200Q-6%20-7%200%201Q6%20-7%2012%200%22%20fill%3D%22none%22%20stroke%3D%22%23456988%22%20stroke-opacity%3D%22.59%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%2F%3E%3Crect%20width%3D%221440%22%20height%3D%22900%22%20fill%3D%22url%28%23veil%29%22%2F%3E%3C%2Fsvg%3E");}
+@media(max-aspect-ratio:3/4){body.cx-sky-sun::after{background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20390%20844%22%20preserveAspectRatio%3D%22xMidYMid%20slice%22%3E%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22sky%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%22.22%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%236196c6%22%2F%3E%3Cstop%20offset%3D%22.43%22%20stop-color%3D%22%2385b2d0%22%2F%3E%3Cstop%20offset%3D%22.8%22%20stop-color%3D%22%23a9c1d0%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23d1c2b5%22%2F%3E%3C%2FlinearGradient%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22light%22%3E%3Cstop%20stop-color%3D%22%23ffe7b4%22%20stop-opacity%3D%22.49%22%2F%3E%3Cstop%20offset%3D%22.52%22%20stop-color%3D%22%23ffe9c9%22%20stop-opacity%3D%22.15%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ffe9c9%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22halo%22%3E%3Cstop%20stop-color%3D%22%23fff2c4%22%20stop-opacity%3D%22.86%22%2F%3E%3Cstop%20offset%3D%22.32%22%20stop-color%3D%22%23ffdf97%22%20stop-opacity%3D%22.55%22%2F%3E%3Cstop%20offset%3D%22.72%22%20stop-color%3D%22%23ffdf97%22%20stop-opacity%3D%22.13%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ffdf97%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22sun%22%20cx%3D%22.36%22%20cy%3D%22.28%22%20r%3D%22.82%22%3E%3Cstop%20stop-color%3D%22%23fff8d7%22%2F%3E%3Cstop%20offset%3D%22.55%22%20stop-color%3D%22%23ffe4a3%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23eebc68%22%2F%3E%3C%2FradialGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22cloud%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%22.14%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23fef7eb%22%2F%3E%3Cstop%20offset%3D%22.48%22%20stop-color%3D%22%23e6edf0%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23a6bccd%22%2F%3E%3C%2FlinearGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22cloud2%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23f2eee9%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23a4bbcf%22%2F%3E%3C%2FlinearGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22veil%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23d9e4eb%22%20stop-opacity%3D%220%22%2F%3E%3Cstop%20offset%3D%22.6%22%20stop-color%3D%22%23d9e4eb%22%20stop-opacity%3D%22.16%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23e4cfbc%22%20stop-opacity%3D%22.26%22%2F%3E%3C%2FlinearGradient%3E%0A%20%20%20%20%3Cfilter%20id%3D%22soft%22%20x%3D%22-20%25%22%20y%3D%22-50%25%22%20width%3D%22140%25%22%20height%3D%22200%25%22%3E%3CfeGaussianBlur%20stdDeviation%3D%2210%22%2F%3E%3C%2Ffilter%3E%0A%20%20%20%20%3Cfilter%20id%3D%22haze%22%20x%3D%22-20%25%22%20y%3D%22-50%25%22%20width%3D%22140%25%22%20height%3D%22200%25%22%3E%3CfeGaussianBlur%20stdDeviation%3D%2222%22%2F%3E%3C%2Ffilter%3E%0A%20%20%20%20%3Cg%20id%3D%22cloudA%22%3E%3Cpath%20fill%3D%22url%28%23cloud%29%22%20d%3D%22M-28%20116C8%2094%2047%20105%2073%2087C70%2063%2094%2045%20123%2048C137%2015%20165%201%20195%2012C217%202%20248%2016%20257%2039C291%2019%20326%2038%20338%2062C365%2051%20390%2067%20401%2083C445%2069%20473%2092%20473%20109C525%20109%20551%20126%20574%20147L-28%20147Z%22%2F%3E%3Cpath%20fill%3D%22%23f9f1e4%22%20opacity%3D%22.5%22%20d%3D%22M74%2087Q95%2064%20127%2067Q148%2025%20186%2029Q218%2017%20241%2046Q273%2048%20286%2069Q317%2052%20339%2077Q358%2066%20383%2083Q341%2079%20310%20100Q282%2081%20251%2094Q201%2067%20161%2097Q114%2078%2074%2087Z%22%2F%3E%3Cpath%20fill%3D%22%23769bb9%22%20opacity%3D%22.21%22%20d%3D%22M-10%20125Q81%20100%20145%20116T274%20112T390%20113T550%20134L550%20149H-10Z%22%2F%3E%3C%2Fg%3E%0A%20%20%20%20%3Cg%20id%3D%22cloudB%22%3E%3Cpath%20fill%3D%22url%28%23cloud2%29%22%20d%3D%22M-15%2088Q24%2071%2057%2074Q63%2049%2093%2049Q104%2019%20137%2023Q157%203%20186%2018Q212%2020%20221%2047Q254%2033%20269%2061Q301%2048%20316%2074Q358%2075%20384%20100H-15Z%22%2F%3E%3Cpath%20fill%3D%22%23fff5e9%22%20opacity%3D%22.38%22%20d%3D%22M55%2074Q74%2057%2099%2065Q117%2029%20150%2039Q175%2016%20195%2040Q213%2042%20221%2058Q176%2052%20150%2068Q119%2051%2091%2078Z%22%2F%3E%3C%2Fg%3E%0A%20%20%20%20%3C%2Fdefs%3E%3Crect%20width%3D%22390%22%20height%3D%22844%22%20fill%3D%22url%28%23sky%29%22%2F%3E%3Cellipse%20cx%3D%22310%22%20cy%3D%22112%22%20rx%3D%22214.50000000000003%22%20ry%3D%22405.12%22%20fill%3D%22url%28%23light%29%22%2F%3E%3Cg%20opacity%3D%220.32%22%20transform%3D%22translate%28-95%20105%29%20scale%280.64%200.64%29%22%20filter%3D%22url%28%23soft%29%22%3E%3Cuse%20href%3D%22%23cloudB%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.3%22%20transform%3D%22translate%28435%20350%29%20scale%28-0.49%200.49%29%22%20filter%3D%22url%28%23soft%29%22%3E%3Cuse%20href%3D%22%23cloudB%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.37%22%20transform%3D%22translate%28-170%20615%29%20scale%280.72%200.72%29%22%20filter%3D%22url%28%23soft%29%22%3E%3Cuse%20href%3D%22%23cloudA%22%2F%3E%3C%2Fg%3E%3Ccircle%20cx%3D%22310%22%20cy%3D%22112%22%20r%3D%22162.8%22%20fill%3D%22url%28%23halo%29%22%2F%3E%3Ccircle%20cx%3D%22310%22%20cy%3D%22112%22%20r%3D%2255%22%20fill%3D%22none%22%20stroke%3D%22%23fff0c8%22%20stroke-opacity%3D%22.20%22%20stroke-width%3D%221%22%2F%3E%3Ccircle%20cx%3D%22310%22%20cy%3D%22112%22%20r%3D%2244%22%20fill%3D%22url%28%23sun%29%22%20stroke%3D%22%23ffe9ad%22%20stroke-width%3D%221.5%22%2F%3E%3Cg%20opacity%3D%220.69%22%20transform%3D%22translate%28-95%20145%29%20scale%280.53%200.53%29%22%3E%3Cuse%20href%3D%22%23cloudA%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.47%22%20transform%3D%22translate%28420%20490%29%20scale%28-0.48%200.48%29%22%3E%3Cuse%20href%3D%22%23cloudB%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.52%22%20transform%3D%22translate%28-95%20735%29%20scale%280.7%200.7%29%22%3E%3Cuse%20href%3D%22%23cloudA%22%2F%3E%3C%2Fg%3E%3Cpath%20transform%3D%22translate%2848%20294%29%20scale%280.7%29%22%20d%3D%22M-12%200Q-6%20-7%200%201Q6%20-7%2012%200%22%20fill%3D%22none%22%20stroke%3D%22%23456988%22%20stroke-opacity%3D%22.59%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20transform%3D%22translate%2869%20306%29%20scale%280.5%29%22%20d%3D%22M-12%200Q-6%20-7%200%201Q6%20-7%2012%200%22%20fill%3D%22none%22%20stroke%3D%22%23456988%22%20stroke-opacity%3D%22.59%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20transform%3D%22translate%2834%20315%29%20scale%280.45%29%22%20d%3D%22M-12%200Q-6%20-7%200%201Q6%20-7%2012%200%22%20fill%3D%22none%22%20stroke%3D%22%23456988%22%20stroke-opacity%3D%22.59%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%2F%3E%3Crect%20width%3D%22390%22%20height%3D%22844%22%20fill%3D%22url%28%23veil%29%22%2F%3E%3C%2Fsvg%3E")}}
+body.cx-sky-sun canvas#ceu{opacity:0}
+body.cx-sky-sun h1,body.cx-sky-sun h2,body.cx-sky-sun .serif,
+body.cx-sky-sun p,body.cx-sky-sun small{ text-shadow:none }
+body.cx-sky-sun .carta p{text-shadow:none}
+body.cx-sky-sun button{background:#f7c4d4;color:#52233d;box-shadow:0 2px 7px #456b9012}
+body.cx-sky-sun button:hover{background:#f8dcaa;color:#523b20}
+body.cx-sky-sun button:focus-visible,body.cx-sky-sun input:focus-visible,body.cx-sky-sun select:focus-visible,body.cx-sky-sun textarea:focus-visible{outline:3px solid #855176;outline-offset:3px}
+body.cx-sky-sun button.ghost,body.cx-sky-sun .abas button{background:#ffffffa8;color:var(--texto);border:1px solid #607e9b}
+body.cx-sky-sun button.ghost:hover,body.cx-sky-sun .abas button:hover{background:#fff;color:#52233d}
+body.cx-sky-sun .abas button.ativa{background:#f7c4d4;color:#52233d;border-color:#b96e8c}
+body.cx-sky-sun .cartao,body.cx-sky-sun .item,body.cx-sky-sun .cx-day,body.cx-sky-sun .cx-form{background:#ffffffc9;border:1px solid #58769755;box-shadow:0 10px 30px #2f55751f}
+body.cx-sky-sun .cartao{background:linear-gradient(145deg,#fffaf6,#f8eef1 100%);color:#2d4762;border:1px solid #6f86a355;box-shadow:0 12px 34px rgba(37,76,112,.18), inset 0 1px 0 rgba(255,255,255,.72);text-shadow:none;font-weight:600;line-height:1.45}
+body.cx-sky-sun .cartao.serif{color:#35506e;letter-spacing:.01em}
+body.cx-sky-sun .item{color:#28425d;background:linear-gradient(180deg,#fffdfd,#f4f8fb)}
+body.cx-sky-sun .item .serif,body.cx-sky-sun .item strong,body.cx-sky-sun .item b{color:#35506e}
+body.cx-sky-sun #umMotivo,body.cx-sky-sun #cartao{font-size:clamp(1.55rem,2.7vw,2rem)}
+body.cx-sky-sun .cx-empty{background:#ffffff80;border-color:#607e9b88}
+body.cx-sky-sun .cx-theme select{background:#f8fcff;color:var(--texto);border:1px solid #607e9b}
+body.cx-sky-sun .painel input:not([type=checkbox]),body.cx-sky-sun .painel textarea,body.cx-sky-sun #askIn{background:#fff!important;color:var(--texto);border:1px solid #607e9b}
+body.cx-sky-sun input::placeholder,body.cx-sky-sun textarea::placeholder{color:#52647a;opacity:1}
+body.cx-sky-sun input[type=checkbox]{accent-color:#873658}
+body.cx-sky-sun .painel .acoes button,body.cx-sky-sun .buque{background:none;border:0;box-shadow:none}
+body.cx-sky-sun .painel .lixeira-btn{color:#873658;background:#ffffffb8;border-color:#b96e8c}
+body.cx-sky-sun .cx-photo{box-shadow:0 6px 18px #3f6a8950}
+body.cx-sky-sun .cx-photo .cx-card-actions button{color:#64455b;border-color:#64455b88;background:transparent}
+body.cx-sky-sun .cx-photo-open{box-shadow:none}
+body.cx-sky-sun #abertura{background: center / cover no-repeat url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201440%20900%22%20preserveAspectRatio%3D%22xMidYMid%20slice%22%3E%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22sky%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%22.22%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%236196c6%22%2F%3E%3Cstop%20offset%3D%22.43%22%20stop-color%3D%22%2385b2d0%22%2F%3E%3Cstop%20offset%3D%22.8%22%20stop-color%3D%22%23a9c1d0%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23d1c2b5%22%2F%3E%3C%2FlinearGradient%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22light%22%3E%3Cstop%20stop-color%3D%22%23ffe7b4%22%20stop-opacity%3D%22.49%22%2F%3E%3Cstop%20offset%3D%22.52%22%20stop-color%3D%22%23ffe9c9%22%20stop-opacity%3D%22.15%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ffe9c9%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22halo%22%3E%3Cstop%20stop-color%3D%22%23fff2c4%22%20stop-opacity%3D%22.86%22%2F%3E%3Cstop%20offset%3D%22.32%22%20stop-color%3D%22%23ffdf97%22%20stop-opacity%3D%22.55%22%2F%3E%3Cstop%20offset%3D%22.72%22%20stop-color%3D%22%23ffdf97%22%20stop-opacity%3D%22.13%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ffdf97%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22sun%22%20cx%3D%22.36%22%20cy%3D%22.28%22%20r%3D%22.82%22%3E%3Cstop%20stop-color%3D%22%23fff8d7%22%2F%3E%3Cstop%20offset%3D%22.55%22%20stop-color%3D%22%23ffe4a3%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23eebc68%22%2F%3E%3C%2FradialGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22cloud%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%22.14%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23fef7eb%22%2F%3E%3Cstop%20offset%3D%22.48%22%20stop-color%3D%22%23e6edf0%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23a6bccd%22%2F%3E%3C%2FlinearGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22cloud2%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23f2eee9%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23a4bbcf%22%2F%3E%3C%2FlinearGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22veil%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23d9e4eb%22%20stop-opacity%3D%220%22%2F%3E%3Cstop%20offset%3D%22.6%22%20stop-color%3D%22%23d9e4eb%22%20stop-opacity%3D%22.16%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23e4cfbc%22%20stop-opacity%3D%22.26%22%2F%3E%3C%2FlinearGradient%3E%0A%20%20%20%20%3Cfilter%20id%3D%22soft%22%20x%3D%22-20%25%22%20y%3D%22-50%25%22%20width%3D%22140%25%22%20height%3D%22200%25%22%3E%3CfeGaussianBlur%20stdDeviation%3D%2210%22%2F%3E%3C%2Ffilter%3E%0A%20%20%20%20%3Cfilter%20id%3D%22haze%22%20x%3D%22-20%25%22%20y%3D%22-50%25%22%20width%3D%22140%25%22%20height%3D%22200%25%22%3E%3CfeGaussianBlur%20stdDeviation%3D%2222%22%2F%3E%3C%2Ffilter%3E%0A%20%20%20%20%3Cg%20id%3D%22cloudA%22%3E%3Cpath%20fill%3D%22url%28%23cloud%29%22%20d%3D%22M-28%20116C8%2094%2047%20105%2073%2087C70%2063%2094%2045%20123%2048C137%2015%20165%201%20195%2012C217%202%20248%2016%20257%2039C291%2019%20326%2038%20338%2062C365%2051%20390%2067%20401%2083C445%2069%20473%2092%20473%20109C525%20109%20551%20126%20574%20147L-28%20147Z%22%2F%3E%3Cpath%20fill%3D%22%23f9f1e4%22%20opacity%3D%22.5%22%20d%3D%22M74%2087Q95%2064%20127%2067Q148%2025%20186%2029Q218%2017%20241%2046Q273%2048%20286%2069Q317%2052%20339%2077Q358%2066%20383%2083Q341%2079%20310%20100Q282%2081%20251%2094Q201%2067%20161%2097Q114%2078%2074%2087Z%22%2F%3E%3Cpath%20fill%3D%22%23769bb9%22%20opacity%3D%22.21%22%20d%3D%22M-10%20125Q81%20100%20145%20116T274%20112T390%20113T550%20134L550%20149H-10Z%22%2F%3E%3C%2Fg%3E%0A%20%20%20%20%3Cg%20id%3D%22cloudB%22%3E%3Cpath%20fill%3D%22url%28%23cloud2%29%22%20d%3D%22M-15%2088Q24%2071%2057%2074Q63%2049%2093%2049Q104%2019%20137%2023Q157%203%20186%2018Q212%2020%20221%2047Q254%2033%20269%2061Q301%2048%20316%2074Q358%2075%20384%20100H-15Z%22%2F%3E%3Cpath%20fill%3D%22%23fff5e9%22%20opacity%3D%22.38%22%20d%3D%22M55%2074Q74%2057%2099%2065Q117%2029%20150%2039Q175%2016%20195%2040Q213%2042%20221%2058Q176%2052%20150%2068Q119%2051%2091%2078Z%22%2F%3E%3C%2Fg%3E%0A%20%20%20%20%3C%2Fdefs%3E%3Crect%20width%3D%221440%22%20height%3D%22900%22%20fill%3D%22url%28%23sky%29%22%2F%3E%3Cellipse%20cx%3D%221180%22%20cy%3D%22150%22%20rx%3D%22792.0000000000001%22%20ry%3D%22432.0%22%20fill%3D%22url%28%23light%29%22%2F%3E%3Cg%20opacity%3D%220.33%22%20transform%3D%22translate%28-105%20105%29%20scale%281.12%201.12%29%22%20filter%3D%22url%28%23soft%29%22%3E%3Cuse%20href%3D%22%23cloudB%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.28%22%20transform%3D%22translate%281510%20345%29%20scale%28-0.85%200.85%29%22%20filter%3D%22url%28%23soft%29%22%3E%3Cuse%20href%3D%22%23cloudA%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.24%22%20transform%3D%22translate%28100%20510%29%20scale%280.88%200.88%29%22%20filter%3D%22url%28%23soft%29%22%3E%3Cuse%20href%3D%22%23cloudB%22%2F%3E%3C%2Fg%3E%3Ccircle%20cx%3D%221180%22%20cy%3D%22150%22%20r%3D%22244.20000000000002%22%20fill%3D%22url%28%23halo%29%22%2F%3E%3Ccircle%20cx%3D%221180%22%20cy%3D%22150%22%20r%3D%2277%22%20fill%3D%22none%22%20stroke%3D%22%23fff0c8%22%20stroke-opacity%3D%22.20%22%20stroke-width%3D%221%22%2F%3E%3Ccircle%20cx%3D%221180%22%20cy%3D%22150%22%20r%3D%2266%22%20fill%3D%22url%28%23sun%29%22%20stroke%3D%22%23ffe9ad%22%20stroke-width%3D%221.5%22%2F%3E%3Cg%20opacity%3D%220.7%22%20transform%3D%22translate%28-115%20180%29%20scale%280.92%200.92%29%22%3E%3Cuse%20href%3D%22%23cloudA%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.59%22%20transform%3D%22translate%281490%20300%29%20scale%28-0.83%200.83%29%22%3E%3Cuse%20href%3D%22%23cloudB%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.48%22%20transform%3D%22translate%28-145%20575%29%20scale%281.12%201.12%29%22%3E%3Cuse%20href%3D%22%23cloudB%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.55%22%20transform%3D%22translate%281550%20665%29%20scale%28-0.9%200.9%29%22%3E%3Cuse%20href%3D%22%23cloudA%22%2F%3E%3C%2Fg%3E%3Cpath%20transform%3D%22translate%28270%20365%29%20scale%281%29%22%20d%3D%22M-12%200Q-6%20-7%200%201Q6%20-7%2012%200%22%20fill%3D%22none%22%20stroke%3D%22%23456988%22%20stroke-opacity%3D%22.59%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20transform%3D%22translate%28300%20349%29%20scale%280.78%29%22%20d%3D%22M-12%200Q-6%20-7%200%201Q6%20-7%2012%200%22%20fill%3D%22none%22%20stroke%3D%22%23456988%22%20stroke-opacity%3D%22.59%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20transform%3D%22translate%28323%20367%29%20scale%280.62%29%22%20d%3D%22M-12%200Q-6%20-7%200%201Q6%20-7%2012%200%22%20fill%3D%22none%22%20stroke%3D%22%23456988%22%20stroke-opacity%3D%22.59%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20transform%3D%22translate%281100%20480%29%20scale%280.65%29%22%20d%3D%22M-12%200Q-6%20-7%200%201Q6%20-7%2012%200%22%20fill%3D%22none%22%20stroke%3D%22%23456988%22%20stroke-opacity%3D%22.59%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%2F%3E%3Crect%20width%3D%221440%22%20height%3D%22900%22%20fill%3D%22url%28%23veil%29%22%2F%3E%3C%2Fsvg%3E")}
+@media(max-aspect-ratio:3/4){body.cx-sky-sun #abertura{background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20390%20844%22%20preserveAspectRatio%3D%22xMidYMid%20slice%22%3E%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22sky%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%22.22%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%236196c6%22%2F%3E%3Cstop%20offset%3D%22.43%22%20stop-color%3D%22%2385b2d0%22%2F%3E%3Cstop%20offset%3D%22.8%22%20stop-color%3D%22%23a9c1d0%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23d1c2b5%22%2F%3E%3C%2FlinearGradient%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22light%22%3E%3Cstop%20stop-color%3D%22%23ffe7b4%22%20stop-opacity%3D%22.49%22%2F%3E%3Cstop%20offset%3D%22.52%22%20stop-color%3D%22%23ffe9c9%22%20stop-opacity%3D%22.15%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ffe9c9%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22halo%22%3E%3Cstop%20stop-color%3D%22%23fff2c4%22%20stop-opacity%3D%22.86%22%2F%3E%3Cstop%20offset%3D%22.32%22%20stop-color%3D%22%23ffdf97%22%20stop-opacity%3D%22.55%22%2F%3E%3Cstop%20offset%3D%22.72%22%20stop-color%3D%22%23ffdf97%22%20stop-opacity%3D%22.13%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ffdf97%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22sun%22%20cx%3D%22.36%22%20cy%3D%22.28%22%20r%3D%22.82%22%3E%3Cstop%20stop-color%3D%22%23fff8d7%22%2F%3E%3Cstop%20offset%3D%22.55%22%20stop-color%3D%22%23ffe4a3%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23eebc68%22%2F%3E%3C%2FradialGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22cloud%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%22.14%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23fef7eb%22%2F%3E%3Cstop%20offset%3D%22.48%22%20stop-color%3D%22%23e6edf0%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23a6bccd%22%2F%3E%3C%2FlinearGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22cloud2%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23f2eee9%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23a4bbcf%22%2F%3E%3C%2FlinearGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22veil%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23d9e4eb%22%20stop-opacity%3D%220%22%2F%3E%3Cstop%20offset%3D%22.6%22%20stop-color%3D%22%23d9e4eb%22%20stop-opacity%3D%22.16%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23e4cfbc%22%20stop-opacity%3D%22.26%22%2F%3E%3C%2FlinearGradient%3E%0A%20%20%20%20%3Cfilter%20id%3D%22soft%22%20x%3D%22-20%25%22%20y%3D%22-50%25%22%20width%3D%22140%25%22%20height%3D%22200%25%22%3E%3CfeGaussianBlur%20stdDeviation%3D%2210%22%2F%3E%3C%2Ffilter%3E%0A%20%20%20%20%3Cfilter%20id%3D%22haze%22%20x%3D%22-20%25%22%20y%3D%22-50%25%22%20width%3D%22140%25%22%20height%3D%22200%25%22%3E%3CfeGaussianBlur%20stdDeviation%3D%2222%22%2F%3E%3C%2Ffilter%3E%0A%20%20%20%20%3Cg%20id%3D%22cloudA%22%3E%3Cpath%20fill%3D%22url%28%23cloud%29%22%20d%3D%22M-28%20116C8%2094%2047%20105%2073%2087C70%2063%2094%2045%20123%2048C137%2015%20165%201%20195%2012C217%202%20248%2016%20257%2039C291%2019%20326%2038%20338%2062C365%2051%20390%2067%20401%2083C445%2069%20473%2092%20473%20109C525%20109%20551%20126%20574%20147L-28%20147Z%22%2F%3E%3Cpath%20fill%3D%22%23f9f1e4%22%20opacity%3D%22.5%22%20d%3D%22M74%2087Q95%2064%20127%2067Q148%2025%20186%2029Q218%2017%20241%2046Q273%2048%20286%2069Q317%2052%20339%2077Q358%2066%20383%2083Q341%2079%20310%20100Q282%2081%20251%2094Q201%2067%20161%2097Q114%2078%2074%2087Z%22%2F%3E%3Cpath%20fill%3D%22%23769bb9%22%20opacity%3D%22.21%22%20d%3D%22M-10%20125Q81%20100%20145%20116T274%20112T390%20113T550%20134L550%20149H-10Z%22%2F%3E%3C%2Fg%3E%0A%20%20%20%20%3Cg%20id%3D%22cloudB%22%3E%3Cpath%20fill%3D%22url%28%23cloud2%29%22%20d%3D%22M-15%2088Q24%2071%2057%2074Q63%2049%2093%2049Q104%2019%20137%2023Q157%203%20186%2018Q212%2020%20221%2047Q254%2033%20269%2061Q301%2048%20316%2074Q358%2075%20384%20100H-15Z%22%2F%3E%3Cpath%20fill%3D%22%23fff5e9%22%20opacity%3D%22.38%22%20d%3D%22M55%2074Q74%2057%2099%2065Q117%2029%20150%2039Q175%2016%20195%2040Q213%2042%20221%2058Q176%2052%20150%2068Q119%2051%2091%2078Z%22%2F%3E%3C%2Fg%3E%0A%20%20%20%20%3C%2Fdefs%3E%3Crect%20width%3D%22390%22%20height%3D%22844%22%20fill%3D%22url%28%23sky%29%22%2F%3E%3Cellipse%20cx%3D%22310%22%20cy%3D%22112%22%20rx%3D%22214.50000000000003%22%20ry%3D%22405.12%22%20fill%3D%22url%28%23light%29%22%2F%3E%3Cg%20opacity%3D%220.32%22%20transform%3D%22translate%28-95%20105%29%20scale%280.64%200.64%29%22%20filter%3D%22url%28%23soft%29%22%3E%3Cuse%20href%3D%22%23cloudB%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.3%22%20transform%3D%22translate%28435%20350%29%20scale%28-0.49%200.49%29%22%20filter%3D%22url%28%23soft%29%22%3E%3Cuse%20href%3D%22%23cloudB%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.37%22%20transform%3D%22translate%28-170%20615%29%20scale%280.72%200.72%29%22%20filter%3D%22url%28%23soft%29%22%3E%3Cuse%20href%3D%22%23cloudA%22%2F%3E%3C%2Fg%3E%3Ccircle%20cx%3D%22310%22%20cy%3D%22112%22%20r%3D%22162.8%22%20fill%3D%22url%28%23halo%29%22%2F%3E%3Ccircle%20cx%3D%22310%22%20cy%3D%22112%22%20r%3D%2255%22%20fill%3D%22none%22%20stroke%3D%22%23fff0c8%22%20stroke-opacity%3D%22.20%22%20stroke-width%3D%221%22%2F%3E%3Ccircle%20cx%3D%22310%22%20cy%3D%22112%22%20r%3D%2244%22%20fill%3D%22url%28%23sun%29%22%20stroke%3D%22%23ffe9ad%22%20stroke-width%3D%221.5%22%2F%3E%3Cg%20opacity%3D%220.69%22%20transform%3D%22translate%28-95%20145%29%20scale%280.53%200.53%29%22%3E%3Cuse%20href%3D%22%23cloudA%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.47%22%20transform%3D%22translate%28420%20490%29%20scale%28-0.48%200.48%29%22%3E%3Cuse%20href%3D%22%23cloudB%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.52%22%20transform%3D%22translate%28-95%20735%29%20scale%280.7%200.7%29%22%3E%3Cuse%20href%3D%22%23cloudA%22%2F%3E%3C%2Fg%3E%3Cpath%20transform%3D%22translate%2848%20294%29%20scale%280.7%29%22%20d%3D%22M-12%200Q-6%20-7%200%201Q6%20-7%2012%200%22%20fill%3D%22none%22%20stroke%3D%22%23456988%22%20stroke-opacity%3D%22.59%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20transform%3D%22translate%2869%20306%29%20scale%280.5%29%22%20d%3D%22M-12%200Q-6%20-7%200%201Q6%20-7%2012%200%22%20fill%3D%22none%22%20stroke%3D%22%23456988%22%20stroke-opacity%3D%22.59%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20transform%3D%22translate%2834%20315%29%20scale%280.45%29%22%20d%3D%22M-12%200Q-6%20-7%200%201Q6%20-7%2012%200%22%20fill%3D%22none%22%20stroke%3D%22%23456988%22%20stroke-opacity%3D%22.59%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%2F%3E%3Crect%20width%3D%22390%22%20height%3D%22844%22%20fill%3D%22url%28%23veil%29%22%2F%3E%3C%2Fsvg%3E")}}
+body.cx-sky-sun .lacre{color:#fff9fc}
+body.cx-sky-sun .cx-modal-box,body.cx-sky-sun #aviso,body.cx-sky-sun #ask .item{background:#f6fbff;color:var(--texto);border:1px solid #7294b080;box-shadow:0 12px 40px #20344d40}
+@media(max-width:700px){body.cx-sky-sun::after{opacity:1}body.cx-sky-sun .contador{gap:10px}body.cx-sky-sun .contador div{min-width:52px}}
+
+/* Pôr do sol — ilustração e contraste, escopo exclusivo deste tema. */
+body.cx-sky-sunset{--noite:#f7dfd4;--noite2:#fff0e8;--texto:#342237;--suave:#493448;--ouro:#733c29;--rosa:#792d51;--rosa2:#b74669;color-scheme:light;--cx-sky-background:linear-gradient(#7888a9,#efb69a 70%,#f9a46b);}
+body.cx-sky-sunset::before{opacity:0;inset:auto;width:0;height:0;box-shadow:none;}
+body.cx-sky-sunset::after{opacity:1;inset:0;transform:none;filter:none;background:center / cover no-repeat url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201440%20900%22%20preserveAspectRatio%3D%22xMidYMid%20slice%22%3E%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22sky%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23697fa5%22%2F%3E%3Cstop%20offset%3D%22.28%22%20stop-color%3D%22%23a4a0b6%22%2F%3E%3Cstop%20offset%3D%22.53%22%20stop-color%3D%22%23e4b4a4%22%2F%3E%3Cstop%20offset%3D%22.72%22%20stop-color%3D%22%23ed9b72%22%2F%3E%3Cstop%20offset%3D%22.89%22%20stop-color%3D%22%23f9ae63%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23b95d62%22%2F%3E%3C%2FlinearGradient%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22glow%22%3E%3Cstop%20stop-color%3D%22%23ffe7a0%22%20stop-opacity%3D%22.9%22%2F%3E%3Cstop%20offset%3D%22.32%22%20stop-color%3D%22%23ffd089%22%20stop-opacity%3D%22.55%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ffb374%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22sun%22%3E%3Cstop%20stop-color%3D%22%23fff8d2%22%2F%3E%3Cstop%20offset%3D%22.75%22%20stop-color%3D%22%23ffe8a1%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ffc86b%22%2F%3E%3C%2FradialGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22cloud%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23f5c5aa%22%2F%3E%3Cstop%20offset%3D%22.25%22%20stop-color%3D%22%23d2a3a2%22%2F%3E%3Cstop%20offset%3D%22.72%22%20stop-color%3D%22%238d809a%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23e8ab90%22%2F%3E%3C%2FlinearGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22gold%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23ffd5a0%22%2F%3E%3Cstop%20offset%3D%22.32%22%20stop-color%3D%22%23d78c7c%22%2F%3E%3Cstop%20offset%3D%22.84%22%20stop-color%3D%22%23a26777%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ffc08a%22%2F%3E%3C%2FlinearGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22sea%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23876779%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%234c526d%22%2F%3E%3C%2FlinearGradient%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22mist%22%3E%3Cstop%20stop-color%3D%22%23ffe6cb%22%20stop-opacity%3D%22.54%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ffe6cb%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%0A%20%20%20%20%3Cfilter%20id%3D%22soft%22%20x%3D%22-20%25%22%20y%3D%22-100%25%22%20width%3D%22140%25%22%20height%3D%22300%25%22%3E%3CfeGaussianBlur%20stdDeviation%3D%222.2%22%2F%3E%3C%2Ffilter%3E%0A%20%20%20%20%3Cg%20id%3D%22a%22%3E%3Cpath%20d%3D%22M-18%2030Q27%2019%2062%2022Q85%2011%20113%2015Q137%20-1%20165%2010Q189%20-2%20215%2013Q244%2010%20265%2018Q299%2013%20322%2023Q355%2022%20400%2035Q365%2037%20328%2037Q296%2043%20265%2035Q230%2043%20200%2037Q153%2046%20121%2035Q75%2040%2048%2034Q12%2037%20-18%2030Z%22%20fill%3D%22url%28%23cloud%29%22%2F%3E%3Cpath%20d%3D%22M-10%2030Q52%2024%2087%2026T166%2017Q203%2015%20244%2023T331%2028L392%2035Q335%2029%20296%2033T210%2026Q167%2025%20131%2029T45%2030Z%22%20fill%3D%22%23ffe1bf%22%20opacity%3D%22.5%22%2F%3E%3Cpath%20d%3D%22M11%2033Q81%2036%20129%2032T236%2034T370%2035%22%20fill%3D%22none%22%20stroke%3D%22%23776a86%22%20stroke-width%3D%222%22%20opacity%3D%22.24%22%2F%3E%3C%2Fg%3E%0A%20%20%20%20%3Cg%20id%3D%22b%22%3E%3Cpath%20d%3D%22M0%2036Q30%2025%2066%2025Q93%204%20122%2015Q145%20-3%20172%2010Q190%20-3%20215%2014Q237%207%20262%2023Q283%2016%20311%2025Q338%2022%20380%2034L400%2039Q338%2036%20308%2044Q279%2037%20246%2042Q210%2035%20175%2044Q139%2035%20103%2041Q75%2034%2045%2039Z%22%20fill%3D%22url%28%23gold%29%22%2F%3E%3Cpath%20d%3D%22M12%2035Q48%2027%2078%2027Q108%2016%20135%2019Q164%206%20192%2018Q210%2016%20241%2025T309%2028Q341%2027%20376%2035%22%20fill%3D%22none%22%20stroke%3D%22%23ffd7a6%22%20stroke-width%3D%222.8%22%20opacity%3D%22.75%22%2F%3E%3C%2Fg%3E%0A%20%20%20%20%3C%2Fdefs%3E%3Crect%20width%3D%221440%22%20height%3D%22900%22%20fill%3D%22url%28%23sky%29%22%2F%3E%3Cellipse%20cx%3D%22331.2%22%20cy%3D%22751.5%22%20rx%3D%22763.2%22%20ry%3D%22423.0%22%20fill%3D%22url%28%23glow%29%22%2F%3E%3Cpath%20d%3D%22M-216.0%2036.0%20Q75.6%207.2%20356.4%2030.6%20T864.0%2010.8%20Q572.4%2050.4%20313.2%2048.6%20T-216.0%2036.0Z%22%20fill%3D%22%23fce1c5%22%20opacity%3D%220.43%22%20filter%3D%22url%28%23soft%29%22%2F%3E%3Cpath%20d%3D%22M532.8%2063.0%20Q828.3%2037.1%201112.8%2058.1%20T1627.2%2040.3%20Q1331.7%2076.0%201069.1%2074.3%20T532.8%2063.0Z%22%20fill%3D%22%23fce1c5%22%20opacity%3D%220.36%22%20filter%3D%22url%28%23soft%29%22%2F%3E%3Cpath%20d%3D%22M-129.6%20135.0%20Q123.1%20109.1%20366.5%20130.1%20T806.4%20112.3%20Q553.7%20148.0%20329.0%20146.3%20T-129.6%20135.0Z%22%20fill%3D%22%23fce1c5%22%20opacity%3D%220.47%22%20filter%3D%22url%28%23soft%29%22%2F%3E%3Cpath%20d%3D%22M763.2%20171.0%20Q984.8%20138.6%201198.2%20164.9%20T1584.0%20142.7%20Q1362.4%20187.2%201165.4%20185.2%20T763.2%20171.0Z%22%20fill%3D%22%23fce1c5%22%20opacity%3D%220.4%22%20filter%3D%22url%28%23soft%29%22%2F%3E%3Cpath%20d%3D%22M-288.0%20279.0%20Q-93.6%20250.2%2093.6%20273.6%20T432.0%20253.8%20Q237.6%20293.4%2064.8%20291.6%20T-288.0%20279.0Z%22%20fill%3D%22%23fce1c5%22%20opacity%3D%220.4%22%20filter%3D%22url%28%23soft%29%22%2F%3E%3Cpath%20d%3D%22M1036.8%20306.0%20Q1231.2%20277.2%201418.4%20300.6%20T1756.8%20280.8%20Q1562.4%20320.4%201389.6%20318.6%20T1036.8%20306.0Z%22%20fill%3D%22%23fce1c5%22%20opacity%3D%220.44%22%20filter%3D%22url%28%23soft%29%22%2F%3E%3Cpath%20d%3D%22M-57.6%20441.0%20Q78.5%20416.5%20209.5%20436.4%20T446.4%20419.6%20Q310.3%20453.2%20189.4%20451.7%20T-57.6%20441.0Z%22%20fill%3D%22%23fce1c5%22%20opacity%3D%220.35%22%20filter%3D%22url%28%23soft%29%22%2F%3E%3Cpath%20d%3D%22M1080.0%20477.0%20Q1243.3%20451.1%201400.5%20472.1%20T1684.8%20454.3%20Q1521.5%20490.0%201376.4%20488.3%20T1080.0%20477.0Z%22%20fill%3D%22%23fce1c5%22%20opacity%3D%220.41%22%20filter%3D%22url%28%23soft%29%22%2F%3E%3Cpath%20d%3D%22M-259.2%20612.0%20Q-2.6%20586.8%20244.5%20607.3%20T691.2%20590.0%20Q434.6%20624.6%20206.5%20623.0%20T-259.2%20612.0Z%22%20fill%3D%22%23fce1c5%22%20opacity%3D%220.55%22%20filter%3D%22url%28%23soft%29%22%2F%3E%3Cpath%20d%3D%22M792.0%20603.0%20Q1044.7%20574.2%201288.1%20597.6%20T1728.0%20577.8%20Q1475.3%20617.4%201250.6%20615.6%20T792.0%20603.0Z%22%20fill%3D%22%23fce1c5%22%20opacity%3D%220.47%22%20filter%3D%22url%28%23soft%29%22%2F%3E%3Ccircle%20cx%3D%22331.2%22%20cy%3D%22751.5%22%20r%3D%22217.08%22%20fill%3D%22url%28%23glow%29%22%20opacity%3D%22.68%22%2F%3E%3Ccircle%20cx%3D%22331.2%22%20cy%3D%22751.5%22%20r%3D%2260.300000000000004%22%20fill%3D%22url%28%23sun%29%22%20stroke%3D%22%23ffe8b6%22%20stroke-width%3D%221.4%22%2F%3E%3Cg%20opacity%3D%220.6%22%20transform%3D%22translate%28-201.60%2090.00%29%20scale%281.9800%201.0227%29%22%3E%3Cuse%20href%3D%22%23a%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.6%22%20transform%3D%22translate%28950.40%20144.00%29%20scale%281.8000%201.0227%29%22%3E%3Cuse%20href%3D%22%23a%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.6%22%20transform%3D%22translate%28-259.20%20234.00%29%20scale%281.7640%201.3295%29%22%3E%3Cuse%20href%3D%22%23a%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.53%22%20transform%3D%22translate%281108.80%20360.00%29%20scale%281.5120%200.9205%29%22%3E%3Cuse%20href%3D%22%23a%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.4%22%20transform%3D%22translate%28-259.20%20504.00%29%20scale%281.5480%200.8182%29%22%3E%3Cuse%20href%3D%22%23a%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.56%22%20transform%3D%22translate%281036.80%20558.00%29%20scale%281.8000%201.0227%29%22%3E%3Cuse%20href%3D%22%23b%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.66%22%20transform%3D%22translate%28-187.20%20675.00%29%20scale%281.8000%200.9205%29%22%3E%3Cuse%20href%3D%22%23b%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.53%22%20transform%3D%22translate%28576.00%20706.50%29%20scale%282.5200%201.0227%29%22%3E%3Cuse%20href%3D%22%23b%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.72%22%20transform%3D%22translate%28-72.00%20801.00%29%20scale%281.6200%200.7159%29%22%3E%3Cuse%20href%3D%22%23b%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.67%22%20transform%3D%22translate%28820.80%20783.00%29%20scale%282.0520%200.6136%29%22%3E%3Cuse%20href%3D%22%23b%22%2F%3E%3C%2Fg%3E%3Cellipse%20cx%3D%22720.0%22%20cy%3D%22450.0%22%20rx%3D%22561.6%22%20ry%3D%22414.0%22%20fill%3D%22url%28%23mist%29%22%2F%3E%3Crect%20y%3D%22841.5%22%20width%3D%221440%22%20height%3D%2258.5%22%20fill%3D%22url%28%23sea%29%22%2F%3E%3Cpath%20d%3D%22M0%20841.5H1440%22%20stroke%3D%22%23ffd39b%22%20opacity%3D%22.72%22%2F%3E%3Cpath%20d%3D%22M1161.6%20872.0h111.5%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%220.75%22%20opacity%3D%220.36%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M952.4%20882.7h31.9%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%220.48%22%20opacity%3D%220.24%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M363.4%20885.2h68.6%22%20stroke%3D%22%23f7bf90%22%20stroke-width%3D%220.78%22%20opacity%3D%220.38%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M578.3%20896.8h115.1%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%220.52%22%20opacity%3D%220.37%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M217.3%20892.7h87.6%22%20stroke%3D%22%23f7bf90%22%20stroke-width%3D%221.04%22%20opacity%3D%220.42%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M777.5%20853.8h104.2%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%221.12%22%20opacity%3D%220.22%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M1353.3%20846.3h66.0%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%221.50%22%20opacity%3D%220.16%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M1171.3%20889.0h107.7%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%220.47%22%20opacity%3D%220.24%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M1082.9%20844.5h54.8%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%221.46%22%20opacity%3D%220.24%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M1249.6%20886.8h44.0%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%221.03%22%20opacity%3D%220.42%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M518.0%20872.3h46.6%22%20stroke%3D%22%23f7bf90%22%20stroke-width%3D%221.28%22%20opacity%3D%220.18%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M800.0%20876.8h73.4%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%220.59%22%20opacity%3D%220.32%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M459.2%20895.1h52.7%22%20stroke%3D%22%23f7bf90%22%20stroke-width%3D%221.40%22%20opacity%3D%220.30%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M14.1%20857.4h92.1%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%220.82%22%20opacity%3D%220.26%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M911.7%20857.4h89.8%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%220.78%22%20opacity%3D%220.14%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M1310.5%20899.2h23.5%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%221.04%22%20opacity%3D%220.33%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M1053.6%20865.1h111.4%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%221.07%22%20opacity%3D%220.24%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M362.0%20852.9h35.7%22%20stroke%3D%22%23f7bf90%22%20stroke-width%3D%220.57%22%20opacity%3D%220.19%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M773.2%20890.8h96.9%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%221.42%22%20opacity%3D%220.37%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M1333.4%20844.4h30.3%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%221.26%22%20opacity%3D%220.38%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M581.3%20880.0h28.6%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%220.54%22%20opacity%3D%220.32%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M766.5%20855.6h46.4%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%220.62%22%20opacity%3D%220.21%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M701.0%20883.9h58.4%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%220.96%22%20opacity%3D%220.29%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M640.9%20871.7h112.1%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%221.24%22%20opacity%3D%220.19%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M271.9%20860.1h55.7%22%20stroke%3D%22%23f7bf90%22%20stroke-width%3D%220.48%22%20opacity%3D%220.35%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M608.7%20874.7h105.2%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%220.80%22%20opacity%3D%220.30%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M800.4%20895.9h79.0%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%220.84%22%20opacity%3D%220.43%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M436.8%20885.7h54.9%22%20stroke%3D%22%23f7bf90%22%20stroke-width%3D%221.07%22%20opacity%3D%220.28%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M276.6%20872.1h75.5%22%20stroke%3D%22%23f7bf90%22%20stroke-width%3D%221.19%22%20opacity%3D%220.36%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M641.6%20867.8h68.8%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%221.01%22%20opacity%3D%220.27%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M379.3%20842.2h114.1%22%20stroke%3D%22%23f7bf90%22%20stroke-width%3D%221.32%22%20opacity%3D%220.26%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E");}
+@media(max-aspect-ratio:3/4){body.cx-sky-sunset::after{background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20390%20844%22%20preserveAspectRatio%3D%22xMidYMid%20slice%22%3E%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22sky%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23697fa5%22%2F%3E%3Cstop%20offset%3D%22.28%22%20stop-color%3D%22%23a4a0b6%22%2F%3E%3Cstop%20offset%3D%22.53%22%20stop-color%3D%22%23e4b4a4%22%2F%3E%3Cstop%20offset%3D%22.72%22%20stop-color%3D%22%23ed9b72%22%2F%3E%3Cstop%20offset%3D%22.89%22%20stop-color%3D%22%23f9ae63%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23b95d62%22%2F%3E%3C%2FlinearGradient%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22glow%22%3E%3Cstop%20stop-color%3D%22%23ffe7a0%22%20stop-opacity%3D%22.9%22%2F%3E%3Cstop%20offset%3D%22.32%22%20stop-color%3D%22%23ffd089%22%20stop-opacity%3D%22.55%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ffb374%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22sun%22%3E%3Cstop%20stop-color%3D%22%23fff8d2%22%2F%3E%3Cstop%20offset%3D%22.75%22%20stop-color%3D%22%23ffe8a1%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ffc86b%22%2F%3E%3C%2FradialGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22cloud%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23f5c5aa%22%2F%3E%3Cstop%20offset%3D%22.25%22%20stop-color%3D%22%23d2a3a2%22%2F%3E%3Cstop%20offset%3D%22.72%22%20stop-color%3D%22%238d809a%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23e8ab90%22%2F%3E%3C%2FlinearGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22gold%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23ffd5a0%22%2F%3E%3Cstop%20offset%3D%22.32%22%20stop-color%3D%22%23d78c7c%22%2F%3E%3Cstop%20offset%3D%22.84%22%20stop-color%3D%22%23a26777%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ffc08a%22%2F%3E%3C%2FlinearGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22sea%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23876779%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%234c526d%22%2F%3E%3C%2FlinearGradient%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22mist%22%3E%3Cstop%20stop-color%3D%22%23ffe6cb%22%20stop-opacity%3D%22.54%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ffe6cb%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%0A%20%20%20%20%3Cfilter%20id%3D%22soft%22%20x%3D%22-20%25%22%20y%3D%22-100%25%22%20width%3D%22140%25%22%20height%3D%22300%25%22%3E%3CfeGaussianBlur%20stdDeviation%3D%222.2%22%2F%3E%3C%2Ffilter%3E%0A%20%20%20%20%3Cg%20id%3D%22a%22%3E%3Cpath%20d%3D%22M-18%2030Q27%2019%2062%2022Q85%2011%20113%2015Q137%20-1%20165%2010Q189%20-2%20215%2013Q244%2010%20265%2018Q299%2013%20322%2023Q355%2022%20400%2035Q365%2037%20328%2037Q296%2043%20265%2035Q230%2043%20200%2037Q153%2046%20121%2035Q75%2040%2048%2034Q12%2037%20-18%2030Z%22%20fill%3D%22url%28%23cloud%29%22%2F%3E%3Cpath%20d%3D%22M-10%2030Q52%2024%2087%2026T166%2017Q203%2015%20244%2023T331%2028L392%2035Q335%2029%20296%2033T210%2026Q167%2025%20131%2029T45%2030Z%22%20fill%3D%22%23ffe1bf%22%20opacity%3D%22.5%22%2F%3E%3Cpath%20d%3D%22M11%2033Q81%2036%20129%2032T236%2034T370%2035%22%20fill%3D%22none%22%20stroke%3D%22%23776a86%22%20stroke-width%3D%222%22%20opacity%3D%22.24%22%2F%3E%3C%2Fg%3E%0A%20%20%20%20%3Cg%20id%3D%22b%22%3E%3Cpath%20d%3D%22M0%2036Q30%2025%2066%2025Q93%204%20122%2015Q145%20-3%20172%2010Q190%20-3%20215%2014Q237%207%20262%2023Q283%2016%20311%2025Q338%2022%20380%2034L400%2039Q338%2036%20308%2044Q279%2037%20246%2042Q210%2035%20175%2044Q139%2035%20103%2041Q75%2034%2045%2039Z%22%20fill%3D%22url%28%23gold%29%22%2F%3E%3Cpath%20d%3D%22M12%2035Q48%2027%2078%2027Q108%2016%20135%2019Q164%206%20192%2018Q210%2016%20241%2025T309%2028Q341%2027%20376%2035%22%20fill%3D%22none%22%20stroke%3D%22%23ffd7a6%22%20stroke-width%3D%222.8%22%20opacity%3D%22.75%22%2F%3E%3C%2Fg%3E%0A%20%20%20%20%3C%2Fdefs%3E%3Crect%20width%3D%22390%22%20height%3D%22844%22%20fill%3D%22url%28%23sky%29%22%2F%3E%3Cellipse%20cx%3D%2285.8%22%20cy%3D%22704.74%22%20rx%3D%22206.70000000000002%22%20ry%3D%22396.67999999999995%22%20fill%3D%22url%28%23glow%29%22%2F%3E%3Cpath%20d%3D%22M-58.5%2033.8%20Q20.5%206.8%2096.5%2028.7%20T234.0%2010.1%20Q155.0%2047.3%2084.8%2045.6%20T-58.5%2033.8Z%22%20fill%3D%22%23fce1c5%22%20opacity%3D%220.43%22%20filter%3D%22url%28%23soft%29%22%2F%3E%3Cpath%20d%3D%22M144.3%2059.1%20Q224.3%2034.8%20301.4%2054.5%20T440.7%2037.8%20Q360.7%2071.2%20289.5%2069.7%20T144.3%2059.1Z%22%20fill%3D%22%23fce1c5%22%20opacity%3D%220.36%22%20filter%3D%22url%28%23soft%29%22%2F%3E%3Cpath%20d%3D%22M-35.1%20126.6%20Q33.3%20102.3%2099.3%20122.0%20T218.4%20105.3%20Q150.0%20138.8%2089.1%20137.2%20T-35.1%20126.6Z%22%20fill%3D%22%23fce1c5%22%20opacity%3D%220.47%22%20filter%3D%22url%28%23soft%29%22%2F%3E%3Cpath%20d%3D%22M206.7%20160.4%20Q266.7%20130.0%20324.5%20154.7%20T429.0%20133.8%20Q369.0%20175.6%20315.6%20173.7%20T206.7%20160.4Z%22%20fill%3D%22%23fce1c5%22%20opacity%3D%220.4%22%20filter%3D%22url%28%23soft%29%22%2F%3E%3Cpath%20d%3D%22M-78.0%20261.6%20Q-25.3%20234.6%2025.4%20256.6%20T117.0%20238.0%20Q64.3%20275.1%2017.5%20273.5%20T-78.0%20261.6Z%22%20fill%3D%22%23fce1c5%22%20opacity%3D%220.4%22%20filter%3D%22url%28%23soft%29%22%2F%3E%3Cpath%20d%3D%22M280.8%20287.0%20Q333.5%20260.0%20384.2%20281.9%20T475.8%20263.3%20Q423.1%20300.5%20376.4%20298.8%20T280.8%20287.0Z%22%20fill%3D%22%23fce1c5%22%20opacity%3D%220.44%22%20filter%3D%22url%28%23soft%29%22%2F%3E%3Cpath%20d%3D%22M-15.6%20413.6%20Q21.3%20390.6%2056.7%20409.3%20T120.9%20393.5%20Q84.0%20425.0%2051.3%20423.6%20T-15.6%20413.6Z%22%20fill%3D%22%23fce1c5%22%20opacity%3D%220.35%22%20filter%3D%22url%28%23soft%29%22%2F%3E%3Cpath%20d%3D%22M292.5%20447.3%20Q336.7%20423.0%20379.3%20442.8%20T456.3%20426.1%20Q412.1%20459.5%20372.8%20458.0%20T292.5%20447.3Z%22%20fill%3D%22%23fce1c5%22%20opacity%3D%220.41%22%20filter%3D%22url%28%23soft%29%22%2F%3E%3Cpath%20d%3D%22M-70.2%20573.9%20Q-0.7%20550.3%2066.2%20569.5%20T187.2%20553.2%20Q117.7%20585.7%2055.9%20584.3%20T-70.2%20573.9Z%22%20fill%3D%22%23fce1c5%22%20opacity%3D%220.55%22%20filter%3D%22url%28%23soft%29%22%2F%3E%3Cpath%20d%3D%22M214.5%20565.5%20Q282.9%20538.5%20348.9%20560.4%20T468.0%20541.8%20Q399.6%20579.0%20338.7%20577.3%20T214.5%20565.5Z%22%20fill%3D%22%23fce1c5%22%20opacity%3D%220.47%22%20filter%3D%22url%28%23soft%29%22%2F%3E%3Ccircle%20cx%3D%2285.8%22%20cy%3D%22704.74%22%20r%3D%22157.9968%22%20fill%3D%22url%28%23glow%29%22%20opacity%3D%22.68%22%2F%3E%3Ccircle%20cx%3D%2285.8%22%20cy%3D%22704.74%22%20r%3D%2243.888%22%20fill%3D%22url%28%23sun%29%22%20stroke%3D%22%23ffe8b6%22%20stroke-width%3D%221.4%22%2F%3E%3Cg%20opacity%3D%220.6%22%20transform%3D%22translate%28-54.60%2084.40%29%20scale%280.5363%200.9591%29%22%3E%3Cuse%20href%3D%22%23a%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.6%22%20transform%3D%22translate%28257.40%20135.04%29%20scale%280.4875%200.9591%29%22%3E%3Cuse%20href%3D%22%23a%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.6%22%20transform%3D%22translate%28-70.20%20219.44%29%20scale%280.4778%201.2468%29%22%3E%3Cuse%20href%3D%22%23a%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.53%22%20transform%3D%22translate%28300.30%20337.60%29%20scale%280.4095%200.8632%29%22%3E%3Cuse%20href%3D%22%23a%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.4%22%20transform%3D%22translate%28-70.20%20472.64%29%20scale%280.4192%200.7673%29%22%3E%3Cuse%20href%3D%22%23a%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.56%22%20transform%3D%22translate%28280.80%20523.28%29%20scale%280.4875%200.9591%29%22%3E%3Cuse%20href%3D%22%23b%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.66%22%20transform%3D%22translate%28-50.70%20633.00%29%20scale%280.4875%200.8632%29%22%3E%3Cuse%20href%3D%22%23b%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.53%22%20transform%3D%22translate%28156.00%20662.54%29%20scale%280.6825%200.9591%29%22%3E%3Cuse%20href%3D%22%23b%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.72%22%20transform%3D%22translate%28-19.50%20751.16%29%20scale%280.4387%200.6714%29%22%3E%3Cuse%20href%3D%22%23b%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.67%22%20transform%3D%22translate%28222.30%20734.28%29%20scale%280.5557%200.5755%29%22%3E%3Cuse%20href%3D%22%23b%22%2F%3E%3C%2Fg%3E%3Cellipse%20cx%3D%22195.0%22%20cy%3D%22422.0%22%20rx%3D%22152.1%22%20ry%3D%22388.24%22%20fill%3D%22url%28%23mist%29%22%2F%3E%3Crect%20y%3D%22789.1400000000001%22%20width%3D%22390%22%20height%3D%2254.8599999999999%22%20fill%3D%22url%28%23sea%29%22%2F%3E%3Cpath%20d%3D%22M0%20789.1400000000001H390%22%20stroke%3D%22%23ffd39b%22%20opacity%3D%22.72%22%2F%3E%3Cpath%20d%3D%22M314.6%20817.8h30.2%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%220.75%22%20opacity%3D%220.36%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M257.9%20827.8h8.6%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%220.48%22%20opacity%3D%220.24%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M98.4%20830.1h18.6%22%20stroke%3D%22%23f7bf90%22%20stroke-width%3D%220.78%22%20opacity%3D%220.38%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M156.6%20841.0h31.2%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%220.52%22%20opacity%3D%220.37%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M58.9%20837.2h23.7%22%20stroke%3D%22%23f7bf90%22%20stroke-width%3D%221.04%22%20opacity%3D%220.42%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M210.6%20800.7h28.2%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%221.12%22%20opacity%3D%220.22%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M366.5%20793.6h17.9%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%221.50%22%20opacity%3D%220.16%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M317.2%20833.7h29.2%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%220.47%22%20opacity%3D%220.24%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M293.3%20792.0h14.8%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%221.46%22%20opacity%3D%220.24%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M338.4%20831.6h11.9%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%221.03%22%20opacity%3D%220.42%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M140.3%20818.0h12.6%22%20stroke%3D%22%23f7bf90%22%20stroke-width%3D%221.28%22%20opacity%3D%220.18%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M216.7%20822.3h19.9%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%220.59%22%20opacity%3D%220.32%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M124.4%20839.4h14.3%22%20stroke%3D%22%23f7bf90%22%20stroke-width%3D%221.40%22%20opacity%3D%220.30%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M3.8%20804.1h24.9%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%220.82%22%20opacity%3D%220.26%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M246.9%20804.1h24.3%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%220.78%22%20opacity%3D%220.14%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M354.9%20843.3h6.4%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%221.04%22%20opacity%3D%220.33%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M285.3%20811.2h30.2%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%221.07%22%20opacity%3D%220.24%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M98.1%20799.9h9.7%22%20stroke%3D%22%23f7bf90%22%20stroke-width%3D%220.57%22%20opacity%3D%220.19%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M209.4%20835.3h26.3%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%221.42%22%20opacity%3D%220.37%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M361.1%20791.9h8.2%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%221.26%22%20opacity%3D%220.38%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M157.4%20825.2h7.8%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%220.54%22%20opacity%3D%220.32%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M207.6%20802.4h12.6%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%220.62%22%20opacity%3D%220.21%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M189.9%20828.9h15.8%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%220.96%22%20opacity%3D%220.29%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M173.6%20817.4h30.4%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%221.24%22%20opacity%3D%220.19%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M73.6%20806.6h15.1%22%20stroke%3D%22%23f7bf90%22%20stroke-width%3D%220.48%22%20opacity%3D%220.35%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M164.8%20820.3h28.5%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%220.80%22%20opacity%3D%220.30%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M216.8%20840.1h21.4%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%220.84%22%20opacity%3D%220.43%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M118.3%20830.5h14.9%22%20stroke%3D%22%23f7bf90%22%20stroke-width%3D%221.07%22%20opacity%3D%220.28%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M74.9%20817.8h20.4%22%20stroke%3D%22%23f7bf90%22%20stroke-width%3D%221.19%22%20opacity%3D%220.36%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M173.8%20813.8h18.6%22%20stroke%3D%22%23d0a3a5%22%20stroke-width%3D%221.01%22%20opacity%3D%220.27%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M102.7%20789.8h30.9%22%20stroke%3D%22%23f7bf90%22%20stroke-width%3D%221.32%22%20opacity%3D%220.26%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E");}}
+body.cx-sky-sunset canvas#ceu{opacity:0;}
+body.cx-sky-sunset h1,body.cx-sky-sunset h2,body.cx-sky-sunset .contador b,body.cx-sky-sunset .serif,body.cx-sky-sunset p,body.cx-sky-sunset small,body.cx-sky-sunset .suave,body.cx-sky-sunset .cx-theme{ text-shadow:0 1px 5px #fff2ddbd; }
+body.cx-sky-sunset button{background:#f5c4ce;color:#54233f;box-shadow:0 3px 10px #5a3d4b22;}
+body.cx-sky-sunset button:hover{background:#ffe0ae;color:#5b3426;}
+body.cx-sky-sunset button.ghost,body.cx-sky-sunset .abas button{background:#fff3e9e8;color:#422a40;border:1px solid #856374;}
+body.cx-sky-sunset .abas button.ativa{background:#f5c4ce;color:#54233f;border-color:#945574;}
+body.cx-sky-sunset .cartao,body.cx-sky-sunset .item,body.cx-sky-sunset .cx-day,body.cx-sky-sunset .cx-form,body.cx-sky-sunset .cx-empty{background:linear-gradient(145deg,#fff9f2,#f9e9e5);color:#40283f;border:1px solid #a67c7c77;box-shadow:0 12px 34px #62404e26;text-shadow:none;}
+body.cx-sky-sunset .cartao.serif,body.cx-sky-sunset .cx-day p{font-weight:600;color:#40283f;text-shadow:none;}
+body.cx-sky-sunset #cartao,body.cx-sky-sunset #umMotivo{font-size:clamp(1.55rem,2.7vw,2rem);line-height:1.45;}
+body.cx-sky-sunset .item p,body.cx-sky-sunset .item .suave,body.cx-sky-sunset .cx-day small,body.cx-sky-sunset .cx-modal-box p{color:#493448;text-shadow:none;}
+body.cx-sky-sunset .cx-day small{color:#733c29;}
+body.cx-sky-sunset .cx-theme select,body.cx-sky-sunset .painel input:not([type=checkbox]),body.cx-sky-sunset .painel textarea,body.cx-sky-sunset #askIn{background:#fff8f3;color:#342237;border:1px solid #8b6574;}
+body.cx-sky-sunset input::placeholder,body.cx-sky-sunset textarea::placeholder{color:#715467;opacity:1;}
+body.cx-sky-sunset input[type=checkbox]{accent-color:#792d51;}
+body.cx-sky-sunset .painel .acoes button,body.cx-sky-sunset .buque,body.cx-sky-sunset .cx-photo-open{background:none;border:0;box-shadow:none;}
+body.cx-sky-sunset .painel .lixeira-btn{color:#792d51;background:#fff3e9;border-color:#a16e83;}
+body.cx-sky-sunset .cx-modal-box,body.cx-sky-sunset #aviso,body.cx-sky-sunset #ask .item{background:#fff5ed;color:#342237;border-color:#ab7e80;}
+body.cx-sky-sunset .cx-photo .cx-card-actions button{color:#64455b;border-color:#64455b88;background:transparent;}
+body.cx-sky-sunset #abertura{background:linear-gradient(145deg,#8b829f,#f4b293);}
+body.cx-sky-sunset #abertura .suave{color:#342237;}
+body.cx-sky-sunset button:focus-visible,body.cx-sky-sunset input:focus-visible,body.cx-sky-sunset select:focus-visible,body.cx-sky-sunset textarea:focus-visible{outline:3px solid #792d51;outline-offset:3px;}
+@media(max-width:700px){body.cx-sky-sunset .contador{gap:10px}body.cx-sky-sunset .contador div{min-width:52px}}
+
+</style>
+<style id="cx-expansion-css">
+/* Expansão do céu: aplicada somente aos novos temas. */
+body.cx-sky-dawn{--cx-sky-background:linear-gradient(180deg,#6e83ab 0%,#c594b2 36%,#f7ba9b 71%,#ffe4b2);}
+body.cx-sky-rain{--cx-sky-background:linear-gradient(160deg,#243a53,#4c687c 58%,#70858d);}
+body.cx-sky-aurora{--cx-sky-background:radial-gradient(ellipse at 20% 0%,#24385e,#15142e 57%,#0a1224);}
+body.cx-sky-meteor{--cx-sky-background:radial-gradient(ellipse at top,#303261,#15142e 60%,#080f24);}
+body.cx-sky-pinkmoon{--cx-sky-background:radial-gradient(ellipse at 75% 10%,#633859,#2b2048 40%,#11102b);}
+body.cx-sky-lanterns{--cx-sky-background:linear-gradient(180deg,#1e2042,#4a304f 63%,#9a5a60);}
+body.cx-sky-spring{--cx-sky-background:linear-gradient(150deg,#759eae,#9cbfbc 55%,#e5b6c4);}
+body.cx-sky-summer{--cx-sky-background:linear-gradient(165deg,#4486ad,#75b6d1 57%,#f1d29d);}
+body.cx-sky-autumn{--cx-sky-background:linear-gradient(175deg,#967e89,#be8d71 56%,#efc394);}
+body.cx-sky-winter{--cx-sky-background:linear-gradient(150deg,#354b69,#7e9fb7 65%,#bdcddd);}
+body.cx-sky-birthday{--cx-sky-background:radial-gradient(ellipse at 50% 15%,#74436f,#3d2857 53%,#201735);}
+body.cx-sky-christmas{--cx-sky-background:radial-gradient(ellipse at 50% 0%,#28594b,#193b3d 54%,#192a36);}
+body.cx-sky-newyear{--cx-sky-background:radial-gradient(ellipse at 50% 0%,#3c3966,#1a1a39 60%,#0d1427);}
+#cx-atmosphere{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden}
+#cx-atmosphere svg{width:100%;height:100%;display:block}
+#cx-skyfx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+#cx-atmosphere .cx-aurora{transform-origin:center;animation:cx-aurora-wave 12s ease-in-out infinite alternate}
+@keyframes cx-aurora-wave{from{transform:translate(-3%,0) skewX(-6deg);opacity:.7}to{transform:translate(4%,2%) skewX(5deg);opacity:1}}
+#cx-atmosphere .cx-eclipse-moon{animation:cx-eclipse-enter 4.5s cubic-bezier(.22,.6,.25,1) both}
+@keyframes cx-eclipse-enter{from{transform:translateX(220px)}to{transform:translateX(0)}}
+body.cx-sky-eclipse::before{opacity:0!important}body.cx-sky-eclipse::after{opacity:0!important}
+body:is(.cx-sky-dawn,.cx-sky-rain,.cx-sky-spring,.cx-sky-summer,.cx-sky-autumn,.cx-sky-winter) canvas#ceu{opacity:0}
+body:is(.cx-sky-aurora,.cx-sky-meteor,.cx-sky-pinkmoon,.cx-sky-lanterns,.cx-sky-birthday,.cx-sky-christmas,.cx-sky-newyear) canvas#ceu{opacity:.7}
+body:is(.cx-sky-dawn,.cx-sky-spring,.cx-sky-summer,.cx-sky-autumn,.cx-sky-winter){--texto:#252a43;--suave:#35445b;--rosa:#712e55;--ouro:#65411d;--noite2:#f6f2f0;--noite:#e5dce4;color-scheme:light}
+body:is(.cx-sky-dawn,.cx-sky-spring,.cx-sky-summer,.cx-sky-autumn,.cx-sky-winter) :is(.cartao,.item,.cx-day,.cx-form,.cx-modal-box,.cx-empty){background:#fff9f3ed;color:#293449;border:1px solid #41557255;box-shadow:0 8px 26px #1b325426;text-shadow:none}
+body:is(.cx-sky-dawn,.cx-sky-spring,.cx-sky-summer,.cx-sky-autumn,.cx-sky-winter) .cartao{font-weight:600;font-size:clamp(1.55rem,2.7vw,2rem)}
+body:is(.cx-sky-dawn,.cx-sky-spring,.cx-sky-summer,.cx-sky-autumn,.cx-sky-winter) .carta p{text-shadow:none;background:#fff9f2d9;border-radius:12px;padding:8px 12px}
+body:is(.cx-sky-dawn,.cx-sky-spring,.cx-sky-summer,.cx-sky-autumn,.cx-sky-winter) :is(button.ghost,.abas button,input,textarea,select){color:#293449;background:#fff9f5e8;border-color:#58657b}
+body:is(.cx-sky-dawn,.cx-sky-spring,.cx-sky-summer,.cx-sky-autumn,.cx-sky-winter) :is(button:not(.ghost),.abas button.ativa){background:#f6bdcf;color:#55233f}
+body.cx-sky-rain :is(h1,h2,p,.suave,.contador small){text-shadow:0 1px 7px #17283caa}
+body.cx-sky-rain :is(.cartao,.item,.cx-day,.cx-form){background:#23394ce8;border:1px solid #b0c4d75c}
+.cx-sky-settings{max-width:380px;width:100%;font-size:.82rem;text-align:center;margin-top:8px;color:var(--suave)}
+.cx-sky-settings summary{cursor:pointer;padding:8px}.cx-sky-settings form{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;align-items:center;margin:8px auto}
+.cx-sky-settings input,.cx-sky-settings select,.cx-sky-settings button{font:inherit;padding:7px 9px;border-radius:10px;max-width:100%}
+.cx-sky-settings input,.cx-sky-settings select{color:var(--texto);background:var(--noite2);border:1px solid var(--suave)}
+.cx-sky-settings a{color:inherit}.cx-sky-settings p{margin:8px auto;max-width:none}.cx-sky-settings [data-weather-status]{overflow-wrap:anywhere}
+.cx-couple{max-width:520px!important}.cx-couple .item{padding:17px 18px}.cx-couple .item h3{padding-right:0}.cx-couple label{display:block;font-size:.86rem;margin:8px 0;color:inherit}.cx-couple select,.cx-couple input,.cx-couple textarea{width:100%;font:inherit;border-radius:10px;border:1px solid var(--suave);padding:10px;background:var(--noite2);color:var(--texto);margin:5px 0 8px}.cx-couple input[type=file]{font-size:.8rem}.cx-couple button{font-size:.88rem;padding:9px 14px}.cx-couple .cx-mini{font-size:.78rem;color:inherit;opacity:.86}.cx-couple .cx-result{font:600 1.6rem 'Cormorant Garamond',Georgia,serif;text-align:center;color:var(--ouro);padding:8px;overflow-wrap:anywhere;min-height:1.5em}.cx-jar{width:102px;height:112px;margin:4px auto 16px;border:3px solid #f5b9cc;border-radius:18px 18px 30px 30px;background:linear-gradient(145deg,#f5c7d044,#ffffff10);position:relative;box-shadow:inset 0 0 15px #f4a6b822}.cx-jar:before{content:'';position:absolute;top:-8px;left:-6px;right:-6px;height:14px;border-radius:7px;background:#cfa6b4}.cx-jar i{position:absolute;font-style:normal;color:#f3a6bb;transform:rotate(var(--r));font-size:26px}.cx-jar.shake{animation:cx-jar-shake .45s ease-in-out 2}@keyframes cx-jar-shake{25%{transform:rotate(-9deg)}75%{transform:rotate(9deg)}}
+.cx-decision-row,.cx-coupon-row{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:7px 0;overflow-wrap:anywhere}.cx-decision-row span,.cx-coupon-row span{min-width:0}.cx-coupon-row{border:1px dashed currentColor;padding:12px;border-radius:12px}.cx-coupon-row button{flex-shrink:0}.cx-love-heart{font-size:3.2rem;text-align:center;line-height:1.25;color:#f19ab9;filter:drop-shadow(0 0 12px #ff84aa55)}.cx-love-heart.is-together{color:#ff679b;animation:cx-pulse 1s infinite}.cx-love-buttons{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}.cx-love-buttons button{margin:0}.cx-love-pop{position:fixed;top:18%;left:50%;transform:translateX(-50%);font-size:4rem;z-index:60;pointer-events:none;animation:cx-love-pop 1.6s ease-out forwards}@keyframes cx-love-pop{0%{opacity:0;transform:translate(-50%,20px) scale(.4)}25%{opacity:1;transform:translate(-50%,0) scale(1.1)}100%{opacity:0;transform:translate(-50%,-70px) scale(1)}}
+.cx-couple [data-status]{font-size:.85rem;overflow-wrap:anywhere}.cx-couple [data-wa-result]{white-space:pre-wrap;overflow-wrap:anywhere}.cx-couple .cx-stat{text-align:center;font-size:2rem;font-weight:600;color:var(--ouro)}
+@media(prefers-reduced-motion:reduce){#cx-atmosphere *,.cx-jar,.cx-love-heart,.cx-love-pop{animation:none!important}}
+#cx-atmosphere,#cx-skyfx{z-index:1}
+body.cx-sky-sun .cx-sky-settings input,body.cx-sky-sunset .cx-sky-settings input{color:var(--texto);background:var(--noite2)}
+.cx-sky-settings [data-city-results] button{margin:3px}.cx-sky-settings [data-bdays] label{width:100%;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:5px}.cx-sky-settings [data-bdays] input{width:140px;min-width:0}
+
+</style>
+<style id="cx-continuous-sky">
+/* O céu ocupa uma única camada fixa, nunca uma sequência de fundos por seção. */
+body{isolation:isolate;background:var(--cx-sky-background,#140f2b);background-repeat:no-repeat;background-size:cover;}
+#cx-sky-base{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;background:var(--cx-sky-background,#140f2b);background-size:cover;background-repeat:no-repeat;}
+</style>
+</head>
+<body>
+<div id="cx-sky-base" aria-hidden="true"></div>
+<canvas id="ceu" aria-hidden="true"></canvas>
+
+<div id="abertura">
+  <div class="env" id="env" role="button" tabindex="0" aria-label="Abrir carta"><div class="aba"></div><div class="lacre">♥</div></div>
+  <p class="suave" id="dica">Tem uma coisa pra você, meu sol. Toque para abrir.</p>
+</div>
+
+<main>
+  <section>
+    <p class="suave" id="oi"></p>
+    <h1 id="nome"></h1>
+    <div class="contador" id="contador" aria-live="off"></div>
+    <p class="suave" id="legenda"></p>
+  </section>
+
+  <section>
+    <h2 id="tituloMotivos"></h2>
+    <div class="cartao serif" id="cartao" role="button" tabindex="0"></div>
+    <button id="prox">Próximo</button>
+    <p class="suave" id="cont" style="margin-top:14px"></p>
+  </section>
+
+  <section id="secCarta">
+    <div class="jardim" id="jardim" aria-hidden="true"></div>
+    <div class="cartaLinha">
+      <div class="carta" id="carta"></div>
+      <button class="buque" id="buque" aria-label="Soltar uma flor">💐</button>
+    </div>
+  </section>
+
+  <section>
+    <h2 id="pergunta"></h2>
+    <div class="botoes" id="botoes">
+      <button id="sim">Sim</button>
+      <button class="ghost" id="nao">Não</button>
+    </div>
+    <p id="resposta" class="serif" style="margin-top:28px;font-size:1.6rem;color:var(--ouro)"></p>
+  </section>
+
+  <section id="felicidade">
+    <h2>Pra quando o dia estiver difícil</h2>
+    <p class="suave" style="margin-top:14px">Abra quando estiver triste, desanimada ou com um dia ruim. Aqui tem mais de 100 motivos pra você se sentir melhor.</p>
+    <div class="botoes"><button id="abreFeliz">Estou precisando</button></div>
+    <div id="feliz" hidden>
+      <div class="cartao serif" id="umMotivo" style="min-height:160px"></div>
+      <button id="outro">Outro motivo</button>
+      <ol class="lista" id="lista"></ol>
+    </div>
+  </section>
+
+  <section id="cantinho">
+    <h2>Nosso cantinho</h2>
+    <div class="abas">
+      <button class="ativa" data-p="pMusica">Música</button><button data-p="pCartas">Cartas</button><button data-p="pMarcos">Datas</button><button data-p="pPlanos">Planos</button><button data-p="pQuiz">Quiz</button>
+    </div>
+    <div class="painel" id="pMusica" style="text-align:center">
+      <p class="serif" style="font-size:1.7rem;margin:0 auto 6px;color:var(--rosa)">O Sol e a Lua</p>
+      <p class="suave" style="margin:0 auto 20px">Pequeno Cidadão · a nossa música</p>
+      <button id="tocar">▶ Tocar</button>
+      <div id="player" style="margin-top:18px"><div id="ytp"></div></div>
+      <div class="edit"><input id="mLink" placeholder="Link do YouTube da música"><button id="salvaMusica">Salvar link</button></div>
+    </div>
+    <div class="painel" id="pCartas" hidden>
+      <div id="listaCartas"></div>
+      <div class="edit">
+        <input id="cTitulo" placeholder="Título da carta"><input id="cData" type="date" title="Só abre a partir desta data (opcional)"><input id="cDica" placeholder="Dica da senha (ela vê)"><input id="cSenha" placeholder="Senha da carta"><textarea id="cTexto" rows="5" placeholder="Escreva a carta"></textarea>
+        <button id="addCarta">Trancar carta</button>
+      </div>
+    </div>
+    <div class="painel" id="pMarcos" hidden>
+      <div id="listaMarcos"></div>
+      <div class="edit"><input id="dNome" placeholder="Nome da data (ex.: aniversário da Sarah)"><input id="dData" type="date"><button id="addData">Adicionar data</button></div>
+    </div>
+    <div class="painel" id="pPlanos" hidden>
+      <div id="listaPlanos"></div>
+      <div class="edit"><input id="pTexto" placeholder="Novo plano"><button id="addPlano">Adicionar plano</button></div>
+    </div>
+    <div class="painel" id="pQuiz" hidden>
+      <div id="quizBox"></div>
+      <div class="edit"><div id="quizAdm"></div><input id="qP" placeholder="Pergunta"><textarea id="qO" rows="4" placeholder="Uma opção por linha"></textarea><input id="qC" type="number" min="1" placeholder="Número da opção certa (1, 2, 3...)"><button id="addQuiz">Adicionar pergunta</button></div>
+    </div>
+    <button id="mais" class="ghost" aria-label="Editar" style="margin-top:16px;width:52px;height:52px;padding:0;font-size:1.8rem;line-height:1">+</button>
+  </section>
+</main>
+<div id="ask" hidden style="position:fixed;inset:0;z-index:20;background:#000b;display:flex;align-items:center;justify-content:center;padding:24px"><div class="item" style="max-width:360px;width:100%;margin:0;padding:20px"><p id="askMsg" style="margin:0 0 12px"></p><input id="askIn" style="width:100%;font:inherit;padding:10px 12px;border-radius:12px;border:1px solid var(--suave);background:#0004;color:var(--texto);margin:0 0 10px"><button id="askOk">OK</button> <button class="ghost" id="askNo">Cancelar</button></div></div>
+<div id="aviso" hidden role="status"></div>
+
+<script>
+/* ====== PERSONALIZE AQUI ====== */
+const CFG = {
+  nome: "Sarah",                         // nome ou apelido dela
+  oi: "Feito só pra você",              // frase pequena acima do nome
+  inicio: "2026-10-26T12:30:00",        // data e hora em que vocês começaram a namorar (ajuste o horário depois)
+  legenda: "juntos. Sol e lua, e cada segundo valendo a pena.",
+  tituloMotivos: "Motivos pelos quais eu te amo",
+  motivos: [
+    "Você me faz muito feliz todos os dias.","Você está sempre pronta pra me ajudar.","Você faz presentes com tanto carinho.","Sua risada é o meu som favorito.","Você é a pessoa mais feliz que eu conheço.","Seu jeito extrovertido deixa qualquer lugar mais vivo.","Você sempre tenta me agradar.","Você faz tanta coisa por mim.","Você é divertidíssima.","Você raramente se desanima.",
+    "Eu vou te amar com qualquer cor de cabelo.","Seus olhos castanhos me desarmam.","Você transforma dia comum em dia bom.","Do seu lado, o tempo voa.","Você me escuta de verdade.","Você me faz rir até quando eu não quero.","Você nunca deixa a energia baixar.","Seus presentes mostram que você presta atenção em mim.","Você lembra do que eu gosto.","Você deixa tudo mais leve.",
+    "Você não desiste fácil.","Seu sorriso conserta qualquer dia ruim.","Você é a minha companhia favorita.","Você faz até tarefa chata virar programa bom.","Você me faz querer ser melhor.","Você puxa assunto com qualquer um, e todo mundo gosta de você.","Seu astral é contagiante.","Você me anima quando eu estou pra baixo.","Você se importa comigo de um jeito que dá pra sentir.","Você sempre dá um jeito de me ajudar.",
+    "Um simples “oi” seu deixa o meu dia melhor.","Seu abraço é o meu lugar preferido.","Você é espontânea.","Você ri das minhas piadas, até das ruins.","Você é intensa no carinho.","Você cuida de mim sem eu pedir.","Você faz planos que me deixam ansioso pelo próximo dia.","Você tem uma energia que ilumina o ambiente.","Você muda a cor do cabelo e continua sendo a minha pessoa favorita.","Você é corajosa de ser quem é.",
+    "Você vê o lado bom das coisas.","Você me faz sentir especial.","Você é a minha pessoa pra tudo.","Você sempre tem uma ideia nova pra gente se divertir.","Você me dá bom dia do jeito mais gostoso.","Seu olhar castanho me acalma.","Você faz questão de me ver bem.","Você comemora as minhas conquistas como se fossem suas.","Você tem um coração enorme.","Você me faz sentir em casa.",
+    "Com você eu nunca me sinto sozinho.","Você tem um jeito único de fazer presentes.","Você é fofa sem nem tentar.","Você faz festa de qualquer coisa.","Você me faz acreditar que tudo dá certo.","Você se joga nas coisas com vontade.","Você me puxa pra viver.","Você me faz sentir amado.","Você me faz rir até no pior momento.","Você me surpreende.",
+    "Você nunca fica de mau humor por muito tempo.","Você coloca alegria em tudo que faz.","Seu carinho vem nas horas certas.","Você é a minha maior alegria.","Você valoriza as coisas pequenas.","Você se esforça por nós.","Só de você aparecer, o meu dia começa melhor.","Ficar com você é fácil.","Você é parceira de verdade.","Você me faz sentir saudade em minutos.",
+    "Você transforma qualquer lugar em lugar bom.","Você é leve e verdadeira.","Conversar com você por horas parece pouco.","Você dá sem esperar nada em troca.","Você nunca se esquece de mim.","Você tem um brilho no olhar quando está feliz, e eu amo ver.","Você me ensina a levar a vida com mais leveza.","Você é a pessoa mais animada de qualquer encontro.","Você faz de tudo pra me ver sorrir.","Seu carinho é diferente de tudo que eu já senti.",
+    "Você me faz querer guardar cada momento.","Você é a minha melhor surpresa.","Você encara o dia com um sorriso.","Cada detalhe seu é uma demonstração de amor.","Com você eu posso ser eu mesmo.","Você é amiga e namorada ao mesmo tempo.","Você me faz sentir sortudo.","Seu jeito de rir, de corpo inteiro, é perfeito.","Você é minha companhia pra qualquer aventura.","Sua alegria passa pra mim.",
+    "Com você nenhum momento fica sem graça.","Você é forte e doce ao mesmo tempo.","Você me faz querer fazer mais por você também.","Você deixa a minha vida mais colorida, não importa a cor do seu cabelo.","Você é a melhor parte dos meus dias.","Cada dia com você parece um presente.","Você me ama do seu jeito, e é o jeito que eu mais gosto.","Com você tudo tem mais graça.","Eu me sinto em paz quando você está perto.","Entre todas as pessoas do mundo, eu escolho você."
+  ],
+  carta: [
+    "Eu poderia te mandar uma mensagem, mas você merece muito mais do que isso.",
+    "Você me esperou por três anos. Três anos sempre ali, firme, sem desistir de mim. Eu sei que várias vezes eu vacilei, e mesmo assim você me aceitou, me deu uma chance e acreditou em nós. Eu nunca vou esquecer disso.",
+    "Obrigado por cada paciência, cada presente, cada risada e cada vez que você me escolheu. Hoje eu tenho o privilégio de chamar você de namorada, e eu quero merecer isso todos os dias.",
+    "Agora a gente tem um anel de sol e lua, e eu fiz questão de combinar com você o que isso significa: você é o meu sol, e eu sou a sua lua.",
+    "Você é o meu sol porque chega e ilumina tudo. Com a sua risada, o seu jeito feliz e a sua energia, qualquer lugar fica mais quente e mais vivo. Onde você está, é dia.",
+    "Eu quero ser a sua lua: aquela que fica por perto quando o dia acaba, que cuida de você nas noites mais difíceis e que nunca some do seu céu, nem quando você não está olhando.",
+    "O sol e a lua parecem opostos, mas vivem se procurando no mesmo céu. Todo sol precisa de uma lua pra completar o dia, e toda lua só brilha porque tem um sol. É assim que eu me sinto com você: eu brilho melhor do seu lado.",
+    "Dizem que sol e lua quase nunca se encontram, mas a gente faz o contrário: a gente se encontra todo dia, e cada encontro vira um eclipse, aquele momento raro em que o mundo para pra ver os dois juntos.",
+    "Que a gente seja assim pra sempre: você aquecendo os meus dias, eu cuidando das suas noites, e os dois juntos no mesmo céu. Com você, até a noite amanhece.",
+    "Se eu pudesse pedir um desejo, era só mais tempo com você. Muito tempo. Uma vida inteira de dias e de noites ao seu lado."
+  ],
+  musicaArquivo: "",                    // (opcional) nome de um áudio enviado ao GitHub, ex.: "musica.mp3"
+  musicaLink: "",                       // cole aqui o link do YouTube de "O Sol e a Lua"
+  cartas: [],
+  datas: [],                             // exemplo: {nome: "Aniversário da Sarah", data: "2027-03-15"}
+  planos: ["Viajar juntos", "Ver o pôr do sol juntos", "Fazer um jantar a dois"],
+  quiz: [
+    {p: "Em que dia a gente começou a namorar?", o: ["26 de outubro", "1º de novembro", "15 de outubro"], c: 0},
+    {p: "Quem é o sol e quem é a lua?", o: ["Ela é o sol, eu sou a lua", "Ela é a lua, eu sou o sol"], c: 0},
+    {p: "Quanto tempo ela me esperou?", o: ["6 meses", "1 ano", "3 anos"], c: 2}
+  ],
+  quizFim: "Não importa a nota, eu te amo do mesmo jeito.",
+  assinatura: "Com todo o meu amor, João Paulo",
+  pergunta: "Quer continuar sendo o meu sol, pra eu ser a sua lua?",
+  sim: "Sim",
+  nao: "Não",
+  final: "Eu sabia. Você é o meu sol e eu serei sempre a sua lua. Te amo, hoje e sempre. ♥"
+};
+/* =============================== */
+
+const $ = id => document.getElementById(id);
+$("oi").textContent = CFG.oi; $("nome").textContent = CFG.nome;
+$("legenda").textContent = CFG.legenda; $("tituloMotivos").textContent = CFG.tituloMotivos;
+$("pergunta").textContent = CFG.pergunta; $("sim").textContent = CFG.sim; $("nao").textContent = CFG.nao;
+$("carta").innerHTML = CFG.carta.map(t => "<p>" + t.replace(/</g,"&lt;") + "</p>").join("") + '<div class="assina">' + CFG.assinatura.replace(/</g,"&lt;") + '</div><p class="suave" style="margin-top:14px;font-size:.9rem">Escrito em 9 de novembro de 2026</p>';
+
+/* abertura */
+let aberto = false;
+function abrir(){
+  if (aberto) return; aberto = true;
+  $("env").classList.add("aberto");
+  setTimeout(() => $("abertura").classList.add("some"), 900);
+}
+$("env").addEventListener("click", abrir);
+$("env").addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); abrir(); } });
+
+/* contador de tempo juntos */
+const unidades = ["dias","horas","min","seg"];
+$("contador").innerHTML = unidades.map(u => '<div><b data-u="'+u+'">0</b><small>'+u+'</small></div>').join("");
+function atualiza(){
+  let s = Math.max(0, Math.floor((Date.now() - new Date(CFG.inicio)) / 1000));
+  const v = { dias: Math.floor(s/86400), horas: Math.floor(s%86400/3600), min: Math.floor(s%3600/60), seg: s%60 };
+  for (const u of unidades) document.querySelector('[data-u="'+u+'"]').textContent = v[u];
+}
+atualiza(); setInterval(atualiza, 1000);
+
+/* motivos */
+let i = 0;
+function mostra(){
+  const c = $("cartao"); c.classList.add("troca");
+  setTimeout(() => { c.textContent = CFG.motivos[i]; c.classList.remove("troca"); $("cont").textContent = (i+1) + " de " + CFG.motivos.length; }, 220);
+}
+function prox(){ i = (i+1) % CFG.motivos.length; mostra(); }
+$("cartao").textContent = CFG.motivos[0]; $("cont").textContent = "1 de " + CFG.motivos.length;
+$("prox").addEventListener("click", prox);
+$("cartao").addEventListener("click", prox);
+$("cartao").addEventListener("keydown", e => { if (e.key === "Enter") prox(); });
+
+/* final: o "não" foge */
+const nao = $("nao");
+function foge(){
+  const sec = nao.closest("section");
+  nao.style.position = "absolute";
+  const w = Math.max(0, sec.clientWidth - nao.offsetWidth - 24), h = Math.max(0, sec.clientHeight - nao.offsetHeight - 24);
+  nao.style.left = (12 + Math.random()*w) + "px"; nao.style.top = (12 + Math.random()*h) + "px";
+}
+nao.addEventListener("pointerenter", foge);
+nao.addEventListener("click", foge);
+$("sim").addEventListener("click", () => {
+  $("botoes").style.display = "none"; $("resposta").textContent = CFG.final;
+  if (matchMedia("(prefers-reduced-motion:reduce)").matches) return;
+  for (let k = 0; k < 40; k++) setTimeout(() => {
+    const e = document.createElement("div"); e.className = "cora"; e.textContent = ["♥","💗","💖"][k%3];
+    e.style.left = Math.random()*100 + "vw"; e.style.fontSize = (18 + Math.random()*28) + "px";
+    e.style.animationDuration = (3 + Math.random()*3) + "s"; document.body.appendChild(e);
+    setTimeout(() => e.remove(), 6500);
+  }, k*90);
+});
+
+/* motivos pra ficar bem */
+const FELIZ = [
+"Você é amada de um jeito que não cabe em palavras.","Você esperou três anos por mim, e hoje eu estou aqui, com você.","Você é uma das pessoas mais felizes e luminosas que eu conheço, e essa luz continua aí mesmo quando o dia está nublado.","Dia ruim é só um dia. Você já superou coisas bem maiores.","Você raramente se desanima, e isso mostra a sua força.","Sua risada é capaz de mudar o humor de qualquer lugar.","Você faz presentes que ninguém mais faria, e isso é só seu.","Tem alguém pensando em você agora. Eu.","Você é divertida de um jeito raro.","Sua alegria é contagiante, até quando você não percebe.",
+"Você tem um coração enorme.","Você sempre tenta ajudar os outros. Hoje deixa que cuidem de você.","Você merece descanso, e descansar também é força.","Você não precisa estar bem o tempo todo pra ser amada.","Eu te amo nos dias bons e nos dias ruins.","Você é o meu sol, e sol também tem dia nublado, mas continua lá em cima.","Eu sou a sua lua, e a lua sempre fica por perto nas noites mais difíceis.","Nosso anel de sol e lua é a nossa promessa de estar na vida um do outro.","Eu quero passar muito tempo com você, e isso nunca vai mudar.","Você faz parte de todos os meus planos.",
+"Você me escolheu mesmo quando eu não facilitei, e eu escolho você de volta.","Você me aceitou com os meus defeitos, e eu aceito os seus e amo cada um.","A nossa história começou em 26 de outubro de 2026 e está só começando.","Cada dia que passa, o nosso contador aumenta, e eu amo isso.","Você é capaz de coisas incríveis.","Olha quanta gente gosta de você.","Você tem um jeito único de fazer cada pessoa se sentir especial.","Seu abraço é um dos melhores lugares do mundo pra mim.","Eu sorrio só de lembrar de você.","Tudo bem chorar. Depois vem um abraço, de perto ou de longe.",
+"Isso vai passar. Você é mais forte do que qualquer fase ruim.","Você já virou o jogo antes e pode virar de novo.","Respira fundo. Eu estou do seu lado.","Bebe uma água, e um pouquinho de calma vem junto.","Coloca a sua música favorita e dança sozinha, do jeito que você faz.","Chama alguém pra conversar e rir um pouco.","Lembra da última vez que você riu até doer a barriga.","Você tem o dom de transformar dia ruim em história engraçada depois.","Amanhã o sol nasce de novo, igual a você.","Depois da noite sempre vem o amanhecer, e com você até a noite amanhece.",
+"Você é muito mais do que o seu pior dia.","Você é suficiente, do jeito que é.","Você não precisa dar conta de tudo sozinha.","Pede ajuda. Eu faço questão de ajudar você, assim como você me ajuda.","Você sempre fez muito por mim, e eu nunca vou esquecer.","Cada presente que você me deu guarda um pedacinho do seu carinho.","Sou muito grato por você existir na minha vida.","Eu tenho muita sorte de ser o namorado de uma pessoa tão especial.","Você deixa a minha vida mais divertida.","Você me ensinou a ter mais leveza.",
+"Até o sol tem eclipse, mas ele volta a brilhar.","Eu te amo com qualquer cor de cabelo, com qualquer humor e em qualquer dia.","Você é linda por dentro e por fora.","Seu sorriso é lindo, e ele vai voltar logo.","Você é a prova de que gente feliz também tem dias difíceis e continua sendo feliz.","Existe um nós que nunca vai sair do seu lado.","Eu nunca vou desistir de você, assim como você nunca desistiu de mim.","Três anos de espera mostram que você sabe lutar pelo que ama.","Você é leal, e isso é raro.","Você é paciente, e isso é lindo.",
+"Você tem um brilho no olhar que eu reconheceria em qualquer lugar.","Seus olhos castanhos ficam ainda mais lindos quando você ri.","Eu estou orgulhoso de você.","Só de tentar, você já é uma vitória.","Pequenas conquistas também contam.","Você tem muita coisa boa pela frente.","A gente vai viver muita coisa junto.","Ainda vamos fazer muitos planos e realizar todos.","Vai ter muito dia de sol ao nosso lado.","Ainda vai ter muito riso.",
+"Eu vou te surpreender, e você vai me surpreender também.","No futuro a gente vai rir de hoje.","O seu valor não muda com o tamanho de um dia ruim.","Você é a minha pessoa favorita.","Você deixa os meus dias mais coloridos.","Minha vida ficou mais feliz desde que você chegou.","Você é amiga e namorada ao mesmo tempo.","A sua energia anima uma sala inteira, e ela é toda sua.","Você é espontânea, e isso é uma delícia.","Eu amo o seu jeito intenso de amar.",
+"Eu amo como você se joga nas coisas.","Eu amo como você tenta me agradar e como você se importa.","Eu amo que você nunca se esqueceu de mim.","Eu amo conversar com você por horas.","Eu amo quando você faz planos pra nós.","Eu amo ver você feliz, então, por favor, se cuida.","Se hoje está pesado, deixa que eu seguro um pouco com você.","Você pode me chamar a qualquer hora.","Eu sempre vou te ouvir, sem pressa.","Eu sempre vou estar na sua torcida.",
+"Você tem a mim, e eu tenho você.","Você me faz querer ser melhor, e eu vou ser.","A gente vai cuidar um do outro, sempre.","Eu prometo ser uma lua que nunca some do seu céu.","Esse site é só um pedacinho de tudo que eu sinto por você.","Cada palavra dessa página foi escrita pensando no seu sorriso.","Esse é o seu lugar de volta pra quando precisar lembrar do quanto é amada.","Fecha os olhos, respira e lembra do meu abraço.","Você é amada. Hoje, amanhã e sempre.","Eu te amo, Sarah.",
+"E mesmo que o dia esteja ruim, você ainda é o meu motivo favorito de ser feliz."
+];
+$("lista").innerHTML = FELIZ.map(t => "<li>" + t + "</li>").join("");
+let ult = -1;
+function sorteia(){
+  let k; do { k = Math.floor(Math.random()*FELIZ.length); } while (k === ult);
+  ult = k; $("umMotivo").textContent = FELIZ[k];
+}
+$("abreFeliz").addEventListener("click", () => {
+  $("feliz").hidden = false; $("abreFeliz").style.display = "none"; sorteia();
+  $("feliz").scrollIntoView({behavior:"smooth", block:"center"});
+});
+$("outro").addEventListener("click", sorteia);
+
+/* cantinho */
+const esc = t => String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
+const dias = d => Math.ceil((d - Date.now())/86400000);
+const ler = (k,d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch(e){ return d; } };
+const gravar = (k,v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
+let modoEd = false;
+const EDIT = () => modoEd || location.hash === "#editar";
+let D = { cartas: CFG.cartas, datas: CFG.datas, planos: CFG.planos, quiz: CFG.quiz, musicaLink: CFG.musicaLink };
+
+/* senha das cartas (criptografia no próprio navegador) */
+const enc = new TextEncoder(), b64 = u => btoa(String.fromCharCode(...new Uint8Array(u))), unb = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function chave(senha, salt){
+  const k = await crypto.subtle.importKey("raw", enc.encode(senha), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2", salt, iterations:100000, hash:"SHA-256"}, k, {name:"AES-GCM", length:256}, false, ["encrypt","decrypt"]);
+}
+async function cifra(txt, senha){
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({name:"AES-GCM", iv}, await chave(senha, salt), enc.encode(txt));
+  return { salt: b64(salt), iv: b64(iv), ct: b64(ct) };
+}
+async function decifra(c, senha){
+  const pt = await crypto.subtle.decrypt({name:"AES-GCM", iv: unb(c.iv)}, await chave(senha, unb(c.salt)), unb(c.ct));
+  return new TextDecoder().decode(pt);
+}
+
+function ask(msg, senha){ return new Promise(res => {
+  const i = $("askIn"); $("askMsg").textContent = msg; i.type = senha ? "password" : "text"; i.value = ""; $("ask").hidden = false; i.focus();
+  const fim = v => { $("ask").hidden = true; $("askOk").onclick = null; $("askNo").onclick = null; res(v); };
+  $("askOk").onclick = () => fim(i.value); $("askNo").onclick = () => fim(null);
+}); }
+function aviso(m){ const a = $("aviso"); a.textContent = m; a.hidden = false; clearTimeout(aviso.t); aviso.t = setTimeout(() => { a.hidden = true; }, 5000); }
+function sure(b){ if (b.dataset.armed) return true; b.dataset.armed = "1"; const t = b.textContent; b.textContent = "Apagar?"; setTimeout(() => { delete b.dataset.armed; b.textContent = t; }, 4000); return false; }
+
+/* salvar no Firebase */
+async function salvar(){
+  try { await window.firebase_salvarDados(D); aviso("Salvo! Ela já pode ver as mudanças. ❤️"); return true; }
+  catch(e){ console.error(e); aviso("Não consegui salvar no Firebase. Confira as regras do Firestore."); return false; }
+}
+let snap = "";
+async function grava(){ if (!(await salvar())) D = JSON.parse(snap); desenhaTudo(); }
+
+document.querySelectorAll(".abas button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll(".abas button").forEach(x => x.classList.toggle("ativa", x === b));
+  document.querySelectorAll(".painel").forEach(p => p.hidden = p.id !== b.dataset.p);
+}));
+
+/* música */
+let yt, au;
+$("tocar").addEventListener("click", () => {
+  const m = (D.musicaLink || "").match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/);
+  if (CFG.musicaArquivo) { if (!au) au = new Audio(CFG.musicaArquivo); if (au.paused) { au.play(); $("tocar").textContent = "⏸ Pausar"; } else { au.pause(); $("tocar").textContent = "▶ Tocar"; } return; }
+  if (!m) return void window.open("https://www.youtube.com/results?search_query=Pequeno+Cidad%C3%A3o+O+Sol+e+a+Lua", "_blank");
+  if (yt) { yt.getPlayerState() === 1 ? yt.pauseVideo() : yt.playVideo(); return; }
+  window.onYouTubeIframeAPIReady = () => { yt = new YT.Player("ytp", { videoId: m[1], width: "100%", height: "220", playerVars: { autoplay: 1, playsinline: 1, rel: 0 }, events: { onStateChange: e => { $("tocar").textContent = e.data === 1 ? "⏸ Pausar" : "▶ Tocar"; } } }); };
+  const s = document.createElement("script"); s.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(s);
+});
+$("salvaMusica").addEventListener("click", () => { D.musicaLink = $("mLink").value.trim(); grava(); });
+
+/* cartas */
+let editI = -1;
+function desenhaCartas(){
+  $("listaCartas").innerHTML = D.cartas.map((c,i) => {
+    const d = c.abre ? new Date(c.abre + "T00:00:00") : null, n = d ? dias(d) : 0;
+    const corpo = n > 0 ? '<p class="suave">Abre em ' + d.toLocaleDateString("pt-BR") + ' (faltam ' + n + ' dias)</p>'
+      : '<p class="suave">' + (c.dica ? "Dica da senha: " + esc(c.dica) : "Digite a senha pra abrir.") + '</p><input type="password" placeholder="Senha" id="s' + i + '"><button data-abrir="' + i + '">Abrir carta</button><p id="t' + i + '" style="margin-top:10px"></p>';
+    const adm = true ? '<div class="acoes"><button data-edita="' + i + '" title="Editar" aria-label="Editar carta">✏️</button><button data-apaga="' + i + '" title="Apagar" aria-label="Apagar carta">🗑️</button></div>' : "";
+    return '<div class="item">' + adm + '<h3>' + (n > 0 ? "🔒 " : "💌 ") + esc(c.titulo) + '</h3>' + corpo + '</div>';
+  }).join("");
+}
+$("listaCartas").addEventListener("click", async e => {
+  const b = e.target.dataset;
+  if (b.abrir !== undefined) { const i = +b.abrir; try { $("t" + i).textContent = await decifra(D.cartas[i], $("s" + i).value); } catch(x){ $("t" + i).textContent = "Senha incorreta. Tente de novo."; } }
+  if (b.apaga !== undefined) {
+    const i = +b.apaga, s = await ask("Senha desta carta, para apagar:", true); if (s === null) return;
+    try { await decifra(D.cartas[i], s); } catch(x){ return aviso("Senha incorreta."); }
+    D.cartas.splice(i, 1); grava();
+  }
+  if (b.edita !== undefined) {
+    const i = +b.edita, s = await ask("Senha desta carta:", true); if (s === null) return;
+    try { const c = D.cartas[i]; $("cTexto").value = await decifra(c, s); $("cTitulo").value = c.titulo; $("cData").value = c.abre || ""; $("cDica").value = c.dica || ""; $("cSenha").value = s; editI = i; modoEd = true; document.body.classList.add("editando"); $("addCarta").textContent = "Salvar alterações"; $("cTitulo").scrollIntoView({behavior:"smooth", block:"center"}); }
+    catch(x){ aviso("Senha incorreta."); }
+  }
+});
+$("addCarta").addEventListener("click", async () => {
+  const t = $("cTitulo").value.trim(), x = $("cTexto").value.trim(), s = $("cSenha").value;
+  if (!t || !x || !s) return aviso("Preencha o título, a senha e a carta.");
+  const c = Object.assign({ titulo: t, abre: $("cData").value, dica: $("cDica").value.trim() }, await cifra(x, s));
+  if (editI >= 0) D.cartas[editI] = c; else D.cartas.push(c);
+  if (!(await salvar())) { D = JSON.parse(snap); return desenhaTudo(); }
+  { editI = -1; $("addCarta").textContent = "Trancar carta"; ["cTitulo","cData","cDica","cSenha","cTexto"].forEach(i => $(i).value = ""); desenhaTudo(); }
+});
+
+/* datas */
+let editD = -1;
+function marcos(){
+  const i0 = new Date(CFG.inicio), n = new Date(); let k = 0, y = 0;
+  for (;;) { const d = new Date(i0); d.setMonth(i0.getMonth() + k + 1); if (d > n) break; k++; }
+  for (;;) { const a = new Date(i0); a.setFullYear(i0.getFullYear() + y + 1); if (a > n) break; y++; }
+  const L = [];
+  for (let j = 1; j <= k + 1; j++) if (j % 12) { const d = new Date(i0); d.setMonth(i0.getMonth() + j); L.push({ nome: j + (j === 1 ? " mês" : " meses") + " de namoro", d }); }
+  for (let j = 1; j <= y + 1; j++) { const a = new Date(i0); a.setFullYear(i0.getFullYear() + j); L.push({ nome: j + (j === 1 ? " ano" : " anos") + " de namoro", d: a }); }
+  D.datas.forEach((x,i) => L.push({ nome: x.nome, d: new Date(x.data + "T00:00:00"), i }));
+  const fut = L.filter(x => x.d > n).sort((p,q) => p.d - q.d), pas = L.filter(x => x.d <= n).sort((p,q) => q.d - p.d);
+  const linha = x => {
+    const f = x.d > n, q = f ? dias(x.d) : Math.floor((n - x.d) / 86400000), u = q === 1 ? " dia" : " dias";
+    const adm = x.i !== undefined ? '<div class="acoes"><button data-edit="' + x.i + '" title="Editar" aria-label="Editar data">✏️</button><button data-del="' + x.i + '" title="Apagar" aria-label="Apagar data">🗑️</button></div>' : "";
+    return '<div class="item">' + adm + '<h3>' + esc(x.nome) + '</h3><p class="suave">' + x.d.toLocaleDateString("pt-BR") + ' · ' + (f ? "faltam " + q + u : "já passou há " + q + u) + '</p></div>';
+  };
+  $("listaMarcos").innerHTML = fut.concat(pas).map(linha).join("");
+}
+$("listaMarcos").addEventListener("click", e => {
+  const b = e.target.dataset;
+  if (b.del !== undefined && sure(e.target)) { D.datas.splice(+b.del, 1); grava(); }
+  if (b.edit !== undefined) { const x = D.datas[+b.edit]; $("dNome").value = x.nome; $("dData").value = x.data; editD = +b.edit; modoEd = true; document.body.classList.add("editando"); $("addData").textContent = "Salvar alterações"; $("dNome").scrollIntoView({behavior:"smooth", block:"center"}); }
+});
+$("addData").addEventListener("click", () => {
+  const nome = $("dNome").value.trim(), data = $("dData").value;
+  if (!nome || !data) return aviso("Preencha o nome e a data.");
+  if (editD >= 0) D.datas[editD] = { nome, data }; else D.datas.push({ nome, data });
+  editD = -1; $("addData").textContent = "Adicionar data"; $("dNome").value = ""; $("dData").value = ""; grava();
+});
+
+/* planos */
+let feitos = ler("feitos", {});
+let planoConfirmando = null;
+const iconeLixeira = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>';
+function desenhaPlanos(){
+  $("listaPlanos").innerHTML = D.planos.map((t,i) => {
+    const pedindo = planoConfirmando === i;
+    const acao = pedindo
+      ? '<span class="confirm-apagar"><button type="button" data-confirm-del="' + i + '">Apagar</button><button type="button" class="ghost" data-cancel-del="' + i + '">Cancelar</button></span>'
+      : '<button type="button" class="lixeira-btn" data-ask-del="' + i + '" title="Apagar plano" aria-label="Apagar plano">' + iconeLixeira + '</button>';
+    return '<div class="item" style="display:flex;gap:12px;align-items:center">' +
+      '<input type="checkbox" id="plano_' + i + '" data-t="' + esc(t) + '"' + (feitos[t] ? " checked" : "") + ' style="width:auto;margin:0;flex:0 0 auto">' +
+      '<label for="plano_' + i + '" style="flex:1;cursor:pointer;line-height:1.4">' + esc(t) + '</label>' +
+      acao +
+    '</div>';
+  }).join("");
+}
+$("listaPlanos").addEventListener("click", e => {
+  const btnAsk = e.target.closest("[data-ask-del]");
+  if (btnAsk) { e.preventDefault(); e.stopPropagation(); planoConfirmando = +btnAsk.dataset.askDel; desenhaPlanos(); return; }
+  const btnCancel = e.target.closest("[data-cancel-del]");
+  if (btnCancel) { e.preventDefault(); e.stopPropagation(); planoConfirmando = null; desenhaPlanos(); return; }
+  const btnConfirm = e.target.closest("[data-confirm-del]");
+  if (btnConfirm) { e.preventDefault(); e.stopPropagation(); const idx = +btnConfirm.dataset.confirmDel; planoConfirmando = null; D.planos.splice(idx, 1); grava(); }
+});
+$("listaPlanos").addEventListener("change", e => { const c = e.target; if (c.dataset && c.dataset.t !== undefined) { feitos[c.dataset.t] = c.checked; gravar("feitos", feitos); } });
+$("addPlano").addEventListener("click", () => { const t = $("pTexto").value.trim(); if (!t) return; D.planos.push(t); $("pTexto").value = ""; grava(); });
+
+/* quiz */
+let qi = 0, pts = 0;
+function pergunta(){
+  const q = D.quiz[qi], box = $("quizBox");
+  if (!q) { box.innerHTML = D.quiz.length ? '<div class="item"><h3>Você acertou ' + pts + ' de ' + D.quiz.length + '</h3><p>' + esc(CFG.quizFim) + '</p></div><button id="refaz">Jogar de novo</button>' : '<p class="suave">Ainda não tem perguntas.</p>'; if ($("refaz")) $("refaz").onclick = () => { qi = 0; pts = 0; pergunta(); }; return; }
+  box.innerHTML = '<div class="item"><h3>' + esc(q.p) + '</h3></div>' + q.o.map((o,i) => '<button class="ghost opc" data-i="' + i + '" style="display:block;width:100%;margin:0 0 8px;text-align:left;border-radius:16px">' + esc(o) + '</button>').join("");
+  box.querySelectorAll(".opc").forEach(b => b.addEventListener("click", () => {
+    const ok = +b.dataset.i === q.c; if (ok) pts++;
+    box.querySelectorAll(".opc").forEach(x => { x.disabled = true; if (+x.dataset.i === q.c) x.style.background = "#f4a6b855"; });
+    b.insertAdjacentHTML("afterend", '<p class="suave" style="margin:0 0 12px">' + (ok ? "Acertou! ♥" : "Quase! A resposta certa está destacada.") + '</p>');
+    setTimeout(() => { qi++; pergunta(); }, 1600);
+  }));
+}
+$("quizAdm").addEventListener("click", e => { const i = e.target.dataset.del; if (i !== undefined && sure(e.target)) { D.quiz.splice(+i, 1); grava(); } });
+$("addQuiz").addEventListener("click", () => {
+  const p = $("qP").value.trim(), o = $("qO").value.split("\n").map(s => s.trim()).filter(Boolean), c = +$("qC").value - 1;
+  if (!p || o.length < 2 || !(c >= 0 && c < o.length)) return aviso("Escreva a pergunta, pelo menos 2 opções (uma por linha) e o número da opção certa.");
+  D.quiz.push({ p, o, c }); ["qP","qO","qC"].forEach(i => $(i).value = ""); grava();
+});
+
+$("mais").addEventListener("click", () => { modoEd = !modoEd; desenhaTudo(); });
+function desenhaTudo(){
+  document.body.classList.toggle("editando", EDIT());
+  $("mais").textContent = EDIT() ? "✕" : "+";
+  desenhaCartas(); marcos(); desenhaPlanos(); qi = 0; pts = 0; pergunta();
+  $("mLink").value = D.musicaLink || "";
+  snap = JSON.stringify(D);
+  $("quizAdm").innerHTML = D.quiz.map((q,i) => '<div class="item"><p>' + esc(q.p) + '</p><button class="ghost" data-del="' + i + '">Apagar</button></div>').join("");
+}
+addEventListener("hashchange", desenhaTudo);
+desenhaTudo();
+
+/* flores */
+const FLORES = [["🌹",""],["🌹","hue-rotate(300deg)"],["🌹","hue-rotate(35deg)"],["🌹","hue-rotate(245deg)"],["🌹","saturate(1.3) hue-rotate(330deg)"],["🌷",""],["🌷","hue-rotate(50deg)"],["🌷","hue-rotate(250deg)"],["🌷","hue-rotate(310deg)"],["🌻",""],["🌻","hue-rotate(-20deg)"],["💐",""]], plantadas = [], reduz = matchMedia("(prefers-reduced-motion:reduce)").matches;
+$("buque").addEventListener("click", () => {
+  const j = $("jardim"), r0 = j.getBoundingClientRect(), br = $("buque").getBoundingClientRect();
+  const bx = br.left - r0.left + br.width / 2, by = br.top - r0.top + br.height * 0.3;
+  const W = j.clientWidth, H = j.clientHeight, tam = 33 + Math.random() * 39;
+  const tx = 16 + Math.random() * Math.max(1, W - 32 - tam), ty = 16 + Math.random() * Math.max(1, H - 32 - tam);
+  const f = document.createElement("span"); const fl = FLORES[Math.floor(Math.random() * FLORES.length)]; f.textContent = fl[0];
+  f.style.cssText = "left:" + (bx - tam / 2) + "px;top:" + (by - tam / 2) + "px;font-size:" + tam + "px;will-change:transform" + (fl[1] ? ";filter:" + fl[1] : "");
+  j.appendChild(f); plantadas.push(f);
+  const dx = tx - bx + tam / 2, dy = ty - by + tam / 2, rot = Math.round(Math.random() * 50 - 25);
+  f.animate([
+    { transform: "translate(0,0) scale(.2) rotate(0deg)", opacity: 0 },
+    { transform: "translate(" + dx * 0.45 + "px," + (dy * 0.45 - 70) + "px) scale(1.35) rotate(" + rot * 0.5 + "deg)", opacity: 1, offset: 0.55 },
+    { transform: "translate(" + dx + "px," + dy + "px) scale(1) rotate(" + rot + "deg)", opacity: 0.7 }
+  ], { duration: reduz ? 1 : 1000, easing: "cubic-bezier(.22,.8,.3,1)", fill: "forwards" }).finished.then(() => { f.style.willChange = "auto"; }, () => {});
+  if (plantadas.length > 300) { const velha = plantadas.shift(); velha.animate([{ opacity: 0.7 }, { opacity: 0 }], { duration: 600, fill: "forwards" }).onfinish = () => velha.remove(); }
+});
+
+/* céu estrelado */
+const cv = $("ceu"), cx = cv.getContext("2d"); let est = [];
+function ajusta(){
+  cv.width = innerWidth * devicePixelRatio; cv.height = innerHeight * devicePixelRatio;
+  est = Array.from({length: Math.round(innerWidth*innerHeight/6500)}, () => ({x:Math.random(), y:Math.random(), r:Math.random()*1.4+.3, f:Math.random()*6}));
+}
+function desenha(t){
+  cx.clearRect(0,0,cv.width,cv.height);
+  for (const s of est){
+    cx.globalAlpha = .35 + .65*Math.abs(Math.sin(t/1800 + s.f));
+    cx.fillStyle = s.r > 1.3 ? "#f2d49b" : "#f6eef5";
+    cx.beginPath(); cx.arc(s.x*cv.width, s.y*cv.height, s.r*devicePixelRatio, 0, 6.283); cx.fill();
+  }
+  requestAnimationFrame(desenha);
+}
+ajusta(); addEventListener("resize", ajusta); requestAnimationFrame(desenha);
+</script>
+
+<!-- cantinho-extra: funcionalidades adicionais -->
+<script>
+/* Por padrão, a extensão funciona em modo local, sem tocar no Firebase existente.
+   Para ativar a sincronização, siga as instruções do README. */
+window.CANTINHO_EXTRAS_CONFIG = { compartilhado: false, firebase: null, perfis: {} };
+
+</script>
+<script src="./cantinho-compartilhado.config.js"></script>
+<script id="cantinho-extra-v3-js">
+/* Extensão independente. Deve ser carregada depois do script original. */
+(() => {
+'use strict';
+const main = document.querySelector('main'), cantinho = document.getElementById('cantinho'), tabs = cantinho?.querySelector('.abas');
+if (!main || !cantinho || !tabs || document.getElementById('cx-fotos')) return;
+const settings = window.CANTINHO_EXTRAS_CONFIG || {};
+const cfg = typeof CFG !== 'undefined' ? CFG : {inicio:'2026-10-26T12:30:00',motivos:[]};
+const byId = id => document.getElementById(id);
+const esc = x => String(x ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+const localDay = (d=new Date()) => new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(d).filter(p=>p.type!=='literal').reduce((o,p)=>(o[p.type]=p.value,o),{});
+const today = () => {const p=localDay();return `${p.year}-${p.month}-${p.day}`;};
+const pretty = d => /^\d{4}-\d{2}-\d{2}$/.test(d||'')?d.split('-').reverse().join('/'):'';
+const safeImage = s => /^data:image\/(jpeg|webp|png);base64,[A-Za-z0-9+/=]+$/.test(s||'') ? s : '';
+const note = m => {if(typeof aviso==='function')aviso(m);else console.info(m);};
+const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+let records=[], remote=null, user=null, unsubscribe=null, generation=0;
+let activeStore='local';
+const forms={};
+const makePanel=(id,title,description,fields,addText)=>{
+ const b=document.createElement('button');b.type='button';b.dataset.p=id;b.textContent=title;tabs.append(b);
+ const panel=document.createElement('div');panel.id=id;panel.className='painel cx-panel';panel.hidden=true;
+ panel.innerHTML=`<div class="cx-header"><p class="suave">${esc(description)}</p><button type="button" data-add>${esc(addText)}</button></div><form class="cx-form" hidden>${fields}<p class="cx-error" hidden role="alert"></p><div class="cx-toolbar"><button type="submit">Salvar</button><button type="button" class="ghost" data-cancel>Cancelar</button></div></form><div data-list></div>`;
+ const last=cantinho.querySelector('#mais');cantinho.insertBefore(panel,last||null);
+ const form=panel.querySelector('form');forms[id]={panel,form,list:panel.querySelector('[data-list]'),editing:null};
+ panel.querySelector('[data-add]').onclick=()=>openForm(id);form.querySelector('[data-cancel]').onclick=()=>closeForm(id);
+ return panel;
+};
+const fields={
+ fotos:'<label>Foto (JPG, PNG ou WebP)<input name="foto" type="file" accept="image/*"></label><label>Legenda<input name="title" maxlength="100" placeholder="Um momento nosso..." required></label><label>Data da lembrança<input name="date" type="date" required></label>',
+};
+makePanel('cx-fotos','Fotos','Um álbum de pequenos momentos, só de vocês.',''+fields.fotos,'+ Foto');
+const panelKind={'cx-fotos':'photo'};
+tabs.addEventListener('click',e=>{const b=e.target.closest('button[data-p]');if(!b||!tabs.contains(b))return;tabs.querySelectorAll('button[data-p]').forEach(x=>x.classList.toggle('ativa',x===b));cantinho.querySelectorAll('.painel').forEach(p=>p.hidden=p.id!==b.dataset.p);});
+const syncBox=document.createElement('div');syncBox.className='cx-sync';cantinho.append(syncBox);
+function syncStatus(message){syncBox.replaceChildren(document.createTextNode(message));if(settings.compartilhado&&remote){const b=document.createElement('button');b.className='ghost';b.textContent=user?'Sair':'Entrar com Google';b.onclick=async()=>{try{if(user)await remote.logout();else await remote.login();}catch(e){note('Não foi possível entrar. Confira a configuração do Firebase.');}};syncBox.append(b);}}
+syncStatus(settings.compartilhado?'Conectando às novas funcionalidades…':'Novas funcionalidades em modo local: dados salvos neste navegador.');
+let dbPromise;
+function db(){return dbPromise||=(new Promise((res,rej)=>{const q=indexedDB.open('cantinho-extras-v1',1);q.onupgradeneeded=()=>q.result.createObjectStore('records',{keyPath:'id'});q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error);}));}
+async function localOp(mode,op){const d=await db();return new Promise((res,rej)=>{const t=d.transaction('records',mode);const r=op(t.objectStore('records'));t.oncomplete=()=>res(r.result);t.onabort=t.onerror=()=>rej(t.error||r.error);});}
+async function loadLocal(){const n=++generation;try{const rows=await localOp('readonly',s=>s.getAll());if(n===generation&&activeStore==='local'){records=rows;render();heartbeat();}}catch(e){note('Não foi possível acessar o armazenamento local.');}}
+const channel=typeof BroadcastChannel==='function'?new BroadcastChannel('cantinho-extras-v1'):null;
+if(channel)channel.onmessage=()=>{if(activeStore==='local')loadLocal();};
+async function writeRecord(r){if(settings.compartilhado){if(!user||!remote||activeStore!=='remote')throw Error('Entre em uma conta autorizada primeiro.');await remote.put(r);}else{await localOp('readwrite',s=>s.put(r));channel?.postMessage('changed');await loadLocal();}}
+async function deleteRecord(id){if(settings.compartilhado){if(!user||!remote||activeStore!=='remote')throw Error('Entre em uma conta autorizada primeiro.');await remote.remove(id);}else{await localOp('readwrite',s=>s.delete(id));channel?.postMessage('changed');await loadLocal();}}
+function showError(form,msg){const p=form.querySelector('.cx-error');p.textContent=msg;p.hidden=!msg;}
+function closeForm(id){const o=forms[id];o.editing=null;o.form.reset();o.form.hidden=true;showError(o.form,'');}
+function openForm(id,r){const o=forms[id],f=o.form;if(settings.compartilhado&&(!user||activeStore!=='remote'))return note('Entre em uma conta autorizada para adicionar ou editar.');f.reset();o.editing=r||null;showError(f,'');f.hidden=false;for(const key of ['title','date'])if(f.elements[key])f.elements[key].value=r?.[key]|| (key==='date'?today():'');f.elements.title.focus();}
+async function resizePhoto(file){if(!file||!file.type.startsWith('image/'))throw Error('Selecione uma imagem válida.');if(file.size>30*1024*1024)throw Error('Escolha uma imagem de até 30 MB.');const url=URL.createObjectURL(file);try{const img=new Image();img.src=url;await img.decode();let max=1200;for(let a=0;a<7;a++){const ratio=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.width*ratio));c.height=Math.max(1,Math.round(img.height*ratio));const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,0,0,c.width,c.height);const s=c.toDataURL('image/jpeg',.84-a*.045);if(s.length<430000)return s;max=Math.round(max*.8);}throw Error('Não consegui reduzir essa imagem. Tente outra.');}finally{URL.revokeObjectURL(url);}}
+for(const [id,o] of Object.entries(forms)){o.form.onsubmit=async e=>{e.preventDefault();const f=o.form, submit=f.querySelector('[type=submit]');submit.disabled=true;showError(f,'');try{const read=n=>String(f.elements[n]?.value||'').trim();const kind=panelKind[id], old=o.editing;const r={id:old?.id||uid(),kind,title:read('title'),date:read('date'),created:old?.created||Date.now(),updated:Date.now()};if(!r.title||!r.date)throw Error('Preencha título e data.');if(kind==='photo'){r.image=f.elements.foto.files[0]?await resizePhoto(f.elements.foto.files[0]):old?.image;if(!safeImage(r.image))throw Error('Selecione uma foto.');}await writeRecord(r);closeForm(id);note('Guardado com carinho! ♥');}catch(err){showError(f,err?.message||'Não foi possível salvar.');}finally{submit.disabled=false;}};}
+function sorted(kind,ascending=false){return records.filter(r=>r.kind===kind).sort((a,b)=>(ascending?1:-1)*(String(a.date).localeCompare(String(b.date))||Number(a.created)-Number(b.created)));}
+const empty=t=>`<p class="cx-empty">${esc(t)}</p>`;
+const actions=(r,edit=true)=>`<div class="cx-card-actions">${edit?`<button class="ghost" type="button" data-edit="${esc(r.id)}">Editar</button>`:''}<button class="ghost" type="button" data-delete="${esc(r.id)}">Apagar</button></div>`;
+function render(){const photos=sorted('photo');
+ forms['cx-fotos'].list.innerHTML=photos.length?`<div class="cx-grid">${photos.map(r=>`<figure class="cx-photo"><button class="cx-photo-open" type="button" data-photo="${esc(r.id)}" aria-label="Ver foto: ${esc(r.title)}"><img loading="lazy" src="${safeImage(r.image)}" alt="${esc(r.title)}"></button><figcaption>${esc(r.title)}</figcaption><small>${pretty(r.date)}</small>${actions(r)}</figure>`).join('')}</div>`:empty('Ainda não há fotos. Que tal guardar o primeiro momento? ♡');renderCouple();}
+for(const [id,o] of Object.entries(forms)){o.list.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;const rid=b.dataset.edit||b.dataset.delete||b.dataset.photo;if(!rid)return;const r=records.find(x=>x.id===rid);if(!r)return;if(b.dataset.edit)openForm(id,r);else if(b.dataset.photo)showPhoto(r.id);else if(b.dataset.delete){if(!confirm(`Apagar “${r.title}”?`))return;try{await deleteRecord(r.id);note('Removido.');}catch(err){note(err.message||'Não foi possível apagar.');}}});}
+let modal,priorFocus;
+function closeModal(){if(modal){modal.remove();modal=null;document.removeEventListener('keydown',keyModal);priorFocus?.focus?.();}}
+function keyModal(e){if(e.key==='Escape')closeModal();else if(modal&&e.key==='Tab'){const f=[...modal.querySelectorAll('button,input,select,textarea,[tabindex="0"]')].filter(x=>!x.disabled&&!x.hidden);if(!f.length)return;if(e.shiftKey&&document.activeElement===f[0]){e.preventDefault();f.at(-1).focus();}else if(!e.shiftKey&&document.activeElement===f.at(-1)){e.preventDefault();f[0].focus();}}}
+function openModal(html){if(modal)closeModal();priorFocus=document.activeElement;modal=document.createElement('div');modal.className='cx-modal';modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.setAttribute('aria-label','Nosso cantinho');modal.innerHTML=`<div class="cx-modal-box"><button class="ghost cx-close" type="button" aria-label="Fechar">✕</button><div data-body>${html}</div></div>`;document.body.append(modal);modal.querySelector('.cx-close').onclick=closeModal;modal.addEventListener('click',e=>{if(e.target===modal)closeModal();});document.addEventListener('keydown',keyModal);modal.querySelector('.cx-close').focus();return modal.querySelector('[data-body]');}
+function showPhoto(id){const photos=sorted('photo');let i=photos.findIndex(x=>x.id===id);if(i<0)return;const body=openModal('');const display=()=>{const r=photos[i];body.innerHTML=`<img src="${safeImage(r.image)}" alt="${esc(r.title)}"><h2>${esc(r.title)}</h2><p class="suave">${pretty(r.date)}</p><div class="cx-modal-actions"><button class="ghost" type="button" data-prev ${i===0?'disabled':''}>Anterior</button><small>${i+1} de ${photos.length}</small><button class="ghost" type="button" data-next ${i===photos.length-1?'disabled':''}>Próxima</button></div>`;body.querySelector('[data-prev]').onclick=()=>{if(i>0){i--;display();}};body.querySelector('[data-next]').onclick=()=>{if(i<photos.length-1){i++;display();}};};display();}
+const first=main.querySelector('section');
+const daily=document.createElement('div');daily.className='cx-day';daily.innerHTML='<small>☀ Um motivo para hoje</small><p data-message></p>';if(first&&cfg.motivos?.length){first.append(daily);}
+function dailyUpdate(){if(!cfg.motivos?.length)return;const n=Math.floor(Date.parse(today()+'T00:00:00Z')/86400000);const i=((n%cfg.motivos.length)+cfg.motivos.length)%cfg.motivos.length;daily.querySelector('[data-message]').textContent=cfg.motivos[i];}
+let theme='auto';try{theme=localStorage.getItem('cx-theme')||'auto';}catch{}theme=({day:'sun',night:'moon'}[theme]||theme);
+const themeControl=document.createElement('label');themeControl.className='cx-theme';if(first)first.append(themeControl);
+/* Dentro do módulo existente: reutiliza o mesmo banco local/compartilhado. */
+const skyNames={auto:'Automático',original:'Original',sun:'Sol',dawn:'Amanhecer',sunset:'Pôr do sol',moon:'Lua',rain:'Dia chuvoso',aurora:'Aurora boreal',meteor:'Chuva de estrelas',pinkmoon:'Lua rosa',lanterns:'Festival de lanternas',spring:'Primavera',summer:'Verão',autumn:'Outono',winter:'Inverno',birthday:'Aniversário',christmas:'Natal',newyear:'Ano-Novo',eclipse:'Eclipse'};
+const skyKeys=Object.keys(skyNames).filter(k=>k!=='auto');
+const localGet=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d;}catch{return d;}};
+const localSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch{}};
+let weatherPlace=localGet('cx-weather-place',null),weather=null,weatherFetched=0,weatherBusy=false;
+let dates=localGet('cx-birthdays',{}),rainAudio=null,rainWanted=false,skyCurrent='',seasonCurrent='';
+const dayKey=()=>today();
+function seasonOf(day){const md=day.slice(5);return md>='12-21'||md<'03-20'?'summer':md<'06-21'?'autumn':md<'09-22'?'winter':'spring';}
+function localMinutes(){const p=new Intl.DateTimeFormat('en-GB',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date());return Number(p.find(x=>x.type==='hour').value)*60+Number(p.find(x=>x.type==='minute').value);}
+function timeOf(s,fallback){const m=String(s||'').match(/T(\d\d):(\d\d)/);return m?Number(m[1])*60+Number(m[2]):fallback;}
+function raining(){return weather&&Date.now()-weatherFetched<45*60000&&[51,53,55,56,57,61,63,65,66,67,80,81,82,95,96,99].includes(weather.current?.weather_code);}
+function automaticSky(){const day=today(),md=day.slice(5),n=Number(day.slice(-2)),t=localMinutes();if(anniversary(day,cfg.inicio))return'eclipse';if(Object.values(dates).some(d=>d&&d.slice(-5)===md))return'birthday';if(md==='12-24'||md==='12-25')return'christmas';if(md==='12-31'||md==='01-01')return'newyear';if(raining())return'rain';const fresh=weather&&Date.now()-weatherFetched<45*60000;const rise=timeOf(fresh?weather.daily?.sunrise?.[0]:null,360),set=timeOf(fresh?weather.daily?.sunset?.[0]:null,1080);if(t>=rise-35&&t<rise+40)return'dawn';if(t>=set-45&&t<set+30)return'sunset';if(t>=rise+40&&t<set-45)return'sun';if(md==='06-12'||md==='02-14'||n===15)return'pinkmoon';if(n===7||n===21)return'aurora';if(n===12)return'meteor';if(n===1)return'lanterns';return'moon';}
+const atmosphere=document.createElement('div');atmosphere.id='cx-atmosphere';atmosphere.setAttribute('aria-hidden','true');document.body.insertBefore(atmosphere,document.body.firstChild);
+const fx=document.createElement('canvas');fx.id='cx-skyfx';fx.setAttribute('aria-hidden','true');document.body.insertBefore(fx,document.body.querySelector('main'));const fxctx=fx.getContext('2d');let fw=0,fh=0,particles=[],lastFrame=0;
+function resizeFX(){const d=Math.min(devicePixelRatio||1,2);fw=innerWidth;fh=innerHeight;fx.width=Math.round(fw*d);fx.height=Math.round(fh*d);fxctx.setTransform(d,0,0,d,0,0);particles=[];}resizeFX();addEventListener('resize',()=>{resizeFX();if(skyCurrent)atmosphere.innerHTML=scene(skyCurrent);});
+const defs=`<defs><radialGradient id="cxglow"><stop stop-color="#ffe4ad" stop-opacity=".75"/><stop offset="1" stop-color="#ffc78c" stop-opacity="0"/></radialGradient><radialGradient id="cxpink"><stop stop-color="#ffd7e6"/><stop offset="1" stop-color="#c779a4"/></radialGradient><linearGradient id="cxaur" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#88ffce" stop-opacity="0"/><stop offset=".5" stop-color="#77f1c1" stop-opacity=".64"/><stop offset="1" stop-color="#ad84ff" stop-opacity="0"/></linearGradient><filter id="cxblur"><feGaussianBlur stdDeviation="13"/></filter><linearGradient id="cxcloud" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff1e5"/><stop offset="1" stop-color="#71859d"/></linearGradient></defs>`;
+const heartPoints='1080,205 1050,172 1006,178 1000,215 1027,246 1080,286 1133,246 1160,215 1154,178 1110,172 1080,205';
+const stars=`<g opacity=".42" fill="#ffe6b7" stroke="#ffe6b7"><polyline points="${heartPoints}" fill="none" stroke-width="1.1" stroke-dasharray="3 5"/>${heartPoints.split(' ').map(p=>{const [x,y]=p.split(',');return `<circle cx="${x}" cy="${y}" r="2.8"/>`;}).join('')}<g fill="none" stroke-width="1.2"><path d="M115 160L179 201 235 184 274 220 333 174 366 212"/><path d="M115 160L145 113 199 140 179 201"/></g>${[[115,160],[179,201],[235,184],[274,220],[333,174],[366,212],[145,113],[199,140]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="3"/>`).join('')}</g>`;
+const cloud=(x,y,s,o=.55)=>`<g transform="translate(${x} ${y}) scale(${s})" opacity="${o}"><path d="M-40 90Q0 52 58 63Q65 20 112 29Q140 -12 179 8Q210 -1 238 42Q276 29 300 65Q350 53 390 100H-40Z" fill="url(#cxcloud)"/><path d="M12 80Q74 50 116 57Q150 20 182 31Q220 25 241 58Q285 47 310 75" fill="none" stroke="#fff4e8" stroke-opacity=".35" stroke-width="12" stroke-linecap="round"/></g>`;
+function scene(k){let s='';if(k==='aurora')s=`<g class="cx-aurora" filter="url(#cxblur)"><path d="M-150 185Q150 -30 430 220T950 95T1550 120L1550 350Q1130 190 950 310T430 400T-150 420Z" fill="url(#cxaur)"/><path d="M-100 290Q260 110 630 260T1450 210" fill="none" stroke="#7ef0d0" opacity=".35" stroke-width="40"/></g>`;if(k==='pinkmoon')s=`<circle cx="1150" cy="180" r="205" fill="url(#cxglow)" opacity=".3"/><circle cx="1150" cy="180" r="77" fill="url(#cxpink)"/><g fill="#a95c8e" opacity=".22"><circle cx="1122" cy="164" r="22"/><circle cx="1178" cy="205" r="17"/><circle cx="1147" cy="222" r="13"/></g>`;
+if(k==='eclipse')s=`<g><circle cx="1120" cy="188" r="225" fill="url(#cxglow)" opacity=".6"/><circle cx="1120" cy="188" r="85" fill="#ffc779" stroke="#fff3c9" stroke-width="5"/><circle class="cx-eclipse-moon" cx="1120" cy="188" r="82" fill="#16102b" stroke="#ffe0a7" stroke-width="1"/></g>`;
+if(['dawn','spring','summer','autumn','winter','rain'].includes(k)){const cloudy=k==='rain'||k==='winter';if(!cloudy){const y=k==='dawn'?650:160;s+=`<circle cx="1140" cy="${y}" r="235" fill="url(#cxglow)"/><circle cx="1140" cy="${y}" r="${k==='dawn'?76:60}" fill="#ffe5a9" opacity=".91"/>`;}s+=cloud(-35,95,1.2,cloudy?.75:.55)+cloud(1070,285,1.05,cloudy?.8:.5)+cloud(-140,550,1.3,.45)+cloud(1170,640,1.1,.4);if(k==='winter')s+=`<path d="M0 840L230 570 420 760 630 610 830 790 1090 560 1440 830V900H0Z" fill="#d8e5ec" opacity=".46"/><path d="M0 900L310 710 540 850 860 710 1130 810 1440 690V900Z" fill="#edf4f5" opacity=".42"/>`;if(k==='spring'||k==='autumn'||k==='summer')s+=`<path d="M0 835Q200 760 380 844T770 841T1140 810T1440 810V900H0Z" fill="${k==='autumn'?'#8e655a':k==='summer'?'#6b9f9c':'#77a79a'}" opacity=".33"/>`;}
+if(k==='christmas')s+=`<g fill="#8fba99" opacity=".55"><path d="M95 900V670L0 790H53L0 855H75V900Z"/><path d="M1350 900V640L1230 790H1300L1210 870H1330V900Z"/></g>`;
+if(k==='birthday')s+=`<g opacity=".7">${[[92,185,'#e9a1c0'],[156,260,'#ffd29b'],[1200,245,'#b6c0ec'],[1290,135,'#f2a2bd'],[1330,320,'#ffd1a1']].map(([x,y,c])=>`<g transform="translate(${x} ${y})"><path d="M0 38Q-12 74 3 107T-5 160" stroke="#f5d9e4" fill="none" stroke-width="1.4"/><ellipse rx="32" ry="43" fill="${c}"/><ellipse cx="-11" cy="-12" rx="7" ry="13" fill="#fff" opacity=".25"/><path d="M0 40L-5 47H5Z" fill="${c}"/></g>`).join('')}</g>`;
+if(k==='christmas')s+=`<path d="M0 24Q175 132 360 22Q540 130 720 22Q900 130 1080 22Q1260 130 1440 24" stroke="#87ae8e" stroke-width="3" fill="none" opacity=".6"/>${Array.from({length:33},(_,i)=>{const x=i*45,y=30+Math.sin((x%360)/360*Math.PI)*48;return `<circle cx="${x}" cy="${y}" r="4" fill="${['#ffd47f','#f7a7ba','#c4f5bc'][i%3]}"/>`;}).join('')}`;
+if(['moon','aurora','meteor','pinkmoon','lanterns','eclipse','birthday','christmas','newyear'].includes(k))s+=stars;
+return `<svg viewBox="${innerWidth<650?'880 0 480 900':'0 0 1440 900'}" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">${defs}${s}</svg>`;}
+function effectType(){if(['rain','meteor','lanterns','birthday','christmas','newyear'].includes(skyCurrent))return skyCurrent;if(['spring','autumn','winter','summer'].includes(skyCurrent))return skyCurrent;if(theme==='auto'&&!['eclipse','pinkmoon','aurora'].includes(skyCurrent))return seasonCurrent;return'';}
+function particle(type){const r=Math.random;return{x:r()*fw,y:r()*fh,v:0.5+r()*1.8,size:2+r()*6,phase:r()*6.28,life:r(),type};}
+function fxLoop(t){requestAnimationFrame(fxLoop);if(document.hidden||reduce()){if(particles.length){particles=[];fxctx.clearRect(0,0,fw,fh);}return;}if(t-lastFrame<30)return;const dt=Math.min((t-lastFrame)/33,2);lastFrame=t;fxctx.clearRect(0,0,fw,fh);let type=effectType();if(!type)return;const count=type==='rain'?75:type==='meteor'?9:type==='lanterns'?18:type==='newyear'?24:type==='summer'?15:30;if(particles.length!==count||particles[0]?.type!==type)particles=Array.from({length:count},()=>particle(type));for(let p of particles){const x=p.x,y=p.y;fxctx.save();fxctx.translate(x,y);fxctx.globalAlpha=.5;switch(type){case'rain':fxctx.strokeStyle='#d3eaff';fxctx.lineWidth=1;fxctx.beginPath();fxctx.moveTo(0,0);fxctx.lineTo(-7,18+p.size);fxctx.stroke();p.y+=9*p.v*dt;p.x-=2*dt;break;case'meteor':fxctx.globalAlpha=p.life>.8?.85:0;fxctx.strokeStyle='#ffeac9';fxctx.lineWidth=1.5;fxctx.beginPath();fxctx.moveTo(0,0);fxctx.lineTo(-35,-18);fxctx.stroke();p.x+=4*p.v*dt;p.y+=2*p.v*dt;p.life=(p.life+.005*dt)%1;break;case'lanterns':fxctx.fillStyle='#ffd68b';fxctx.shadowColor='#ffb56f';fxctx.shadowBlur=12;fxctx.fillRect(-5,-8,10,15);fxctx.fillStyle='#f49a67';fxctx.fillRect(-5,4,10,3);p.y-=p.v*.8*dt;p.x+=Math.sin(t/1500+p.phase)*.3;break;case'newyear':{const age=(p.life+t*.00025)%1;fxctx.globalAlpha=(1-age)*.8;fxctx.strokeStyle=['#ffd47d','#f5a8cc','#b5d8ff'][Math.floor(p.phase)%3];for(let i=0;i<9;i++){const a=i*Math.PI*2/9;fxctx.beginPath();fxctx.moveTo(Math.cos(a)*age*18,Math.sin(a)*age*18);fxctx.lineTo(Math.cos(a)*age*38,Math.sin(a)*age*38);fxctx.stroke();}break;}case'birthday':fxctx.rotate(t/500+p.phase);fxctx.fillStyle=['#ffb3ce','#ffe39a','#aee8ed'][Math.floor(p.phase)%3];fxctx.fillRect(-3,-5,6,10);p.y+=p.v*dt;break;case'summer':fxctx.fillStyle='#fff0ad';fxctx.shadowColor='#fff1b1';fxctx.shadowBlur=10;fxctx.beginPath();fxctx.arc(0,0,1.5+p.size*.2,0,Math.PI*2);fxctx.fill();p.y-=.3*p.v*dt;break;case'spring':case'autumn':fxctx.rotate(t/1400+p.phase);fxctx.fillStyle=type==='spring'?'#f4b0c9':['#ba7852','#f1c26d','#c88a55'][Math.floor(p.phase)%3];fxctx.beginPath();fxctx.ellipse(0,0,p.size,p.size*.55,0,0,Math.PI*2);fxctx.fill();p.y+=p.v*dt;p.x+=Math.sin(t/1200+p.phase)*.8;break;default:fxctx.fillStyle='#fff';fxctx.beginPath();fxctx.arc(0,0,p.size*.46,0,Math.PI*2);fxctx.fill();p.y+=p.v*.6*dt;p.x+=Math.sin(t/1400+p.phase)*.5;}fxctx.restore();if(p.y>fh+40)p.y=-30;if(p.y<-40)p.y=fh+25;if(p.x>fw+45)p.x=-40;if(p.x<-45)p.x=fw+35;}}
+requestAnimationFrame(fxLoop);
+function applySky(){const chosen=theme==='auto'?automaticSky():theme;seasonCurrent=seasonOf(today());if(skyCurrent!==chosen){for(const k of skyKeys)document.body.classList.remove('cx-sky-'+k);document.body.classList.add('cx-sky-'+chosen);document.documentElement.dataset.cxTheme=chosen;skyCurrent=chosen;atmosphere.innerHTML=scene(chosen);particles=[];fxctx.clearRect(0,0,fw,fh);}if(!rainWanted||chosen!=='rain'){stopRain();if(chosen!=='rain'&&rainWanted){rainWanted=false;skySettings.querySelector('[data-rain-sound]').textContent='♫ Ligar som de chuva';}}else if(rainAudio?.ctx.state==='suspended')rainAudio.ctx.resume().catch(()=>{});weatherStatus();}
+function stopRain(){if(rainAudio){const a=rainAudio;rainAudio=null;a.ctx.close().catch(()=>{});}}
+async function startRain(){if(rainAudio)return;const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)throw Error('Áudio não disponível');const ctx=new Audio();try{await ctx.resume();const buf=ctx.createBuffer(1,ctx.sampleRate*3,ctx.sampleRate),a=buf.getChannelData(0);let prev=0;for(let i=0;i<a.length;i++){prev=.96*prev+.04*(Math.random()*2-1);a[i]=prev*3;}const src=ctx.createBufferSource();src.buffer=buf;src.loop=true;const filt=ctx.createBiquadFilter();filt.type='lowpass';filt.frequency.value=2300;const gain=ctx.createGain();gain.gain.value=.055;src.connect(filt).connect(gain).connect(ctx.destination);src.start();rainAudio={ctx,src};}catch(e){ctx.close().catch(()=>{});throw e;}}
+const skySettings=document.createElement('details');skySettings.className='cx-sky-settings';skySettings.innerHTML=`<summary>✧ Configurar nosso céu</summary><p data-weather-status></p><form data-city><input name="city" placeholder="Sua cidade" required maxlength="100" aria-label="Cidade"><button type="submit">Buscar</button></form><div data-city-results></div><button type="button" class="ghost" data-forget-city>Desativar clima local</button><p><a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Dados de clima: Open-Meteo</a> · sem GPS</p><button type="button" class="ghost" data-rain-sound>♫ Ligar som de chuva</button><form data-bdays><label>Aniversário do Sol <input type="date" name="sun" aria-label="Aniversário do Sol"></label><label>Aniversário da Lua <input type="date" name="moon" aria-label="Aniversário da Lua"></label><button type="submit">Guardar datas</button></form><p>O céu automático considera horário de Brasília, clima configurado, estações do hemisfério sul e datas especiais. As constelações e eventos são ilustrativos.</p>`;first?.append(skySettings);
+for(const key of ['sun','moon'])skySettings.querySelector('[data-bdays]').elements[key].value=dates[key]||'';
+function weatherStatus(){const e=skySettings.querySelector('[data-weather-status]');e.textContent=weatherPlace?`${weatherPlace.name} · ${weatherBusy?'consultando clima…':weather&&Date.now()-weatherFetched<45*60000?(raining()?'chuva agora':'sem chuva agora'):'clima indisponível'} · ${skyNames[skyCurrent]||''}`:`${skyNames[skyCurrent]||''} · escolha uma cidade para ativar o clima real.`;}
+async function refreshWeather(){if(!weatherPlace||weatherBusy)return;weatherBusy=true;weatherStatus();const place=weatherPlace;try{const u=new URL('https://api.open-meteo.com/v1/forecast');for(const [k,v] of Object.entries({latitude:place.latitude,longitude:place.longitude,current:'weather_code',daily:'sunrise,sunset',timezone:'America/Sao_Paulo',forecast_days:1}))u.searchParams.set(k,v);const r=await fetch(u,{signal:AbortSignal.timeout(12000)});if(!r.ok)throw Error('Clima indisponível');const j=await r.json();if(weatherPlace!==place)return;weather=j;weatherFetched=Date.now();}catch{}finally{weatherBusy=false;applySky();}}
+skySettings.querySelector('[data-city]').onsubmit=async e=>{e.preventDefault();const out=skySettings.querySelector('[data-city-results]');out.textContent='Buscando…';try{const u=new URL('https://geocoding-api.open-meteo.com/v1/search');u.searchParams.set('name',e.target.elements.city.value.trim());u.searchParams.set('language','pt');u.searchParams.set('count','5');const r=await fetch(u,{signal:AbortSignal.timeout(12000)});if(!r.ok)throw Error();const rows=(await r.json()).results||[];out.replaceChildren();if(!rows.length)out.textContent='Nenhuma cidade encontrada.';for(const p of rows){const b=document.createElement('button');b.type='button';b.className='ghost';b.textContent=[p.name,p.admin1,p.country].filter(Boolean).join(', ');b.onclick=()=>{weatherPlace={name:b.textContent,latitude:p.latitude,longitude:p.longitude};localSet('cx-weather-place',weatherPlace);weather=null;out.replaceChildren();applySky();refreshWeather();};out.append(b);}}catch{out.textContent='Não consegui consultar as cidades.';}};
+skySettings.querySelector('[data-forget-city]').onclick=()=>{weatherPlace=null;weather=null;localSet('cx-weather-place',null);applySky();};
+skySettings.querySelector('[data-rain-sound]').onclick=async e=>{rainWanted=!rainWanted;if(rainWanted){try{await startRain();if(skyCurrent!=='rain'){stopRain();rainWanted=false;note('Selecione Dia chuvoso antes de ligar o som.');}}catch{rainWanted=false;note('Não foi possível iniciar o áudio.');}}else stopRain();e.target.textContent=rainWanted?'♫ Desligar som de chuva':'♫ Ligar som de chuva';};
+skySettings.querySelector('[data-bdays]').onsubmit=e=>{e.preventDefault();dates={sun:e.target.elements.sun.value,moon:e.target.elements.moon.value};localSet('cx-birthdays',dates);applySky();note('Datas guardadas!');};
+setInterval(refreshWeather,15*60000);refreshWeather();
+
+if(!Object.hasOwn(skyNames,theme))theme='auto';themeControl.innerHTML='<span>☀ Tema do nosso céu ☾</span><select aria-label="Tema do site">'+Object.entries(skyNames).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')+'</select>';themeControl.querySelector('select').value=theme;
+function themeUpdate(){applySky();}
+themeControl.querySelector('select').onchange=e=>{theme=e.target.value;try{localStorage.setItem('cx-theme',theme);}catch{}themeUpdate();};
+/* Novos painéis. Dados usam IDs distintos e não alteram os registros de fotos. */
+const coupleTabs={};function couplePanel(id,title,html){const b=document.createElement('button');b.type='button';b.dataset.p=id;b.textContent=title;tabs.append(b);const p=document.createElement('div');p.id=id;p.className='painel cx-panel cx-couple';p.hidden=true;p.innerHTML=html;cantinho.insertBefore(p,byId('mais'));coupleTabs[id]=p;return p;}
+const decisions=couplePanel('cx-decisions','Decisões',`<div class="item"><div class="cx-jar" aria-hidden="true"><i style="left:17px;top:26px;--r:-21deg">♥</i><i style="left:54px;top:48px;--r:18deg">✦</i><i style="left:26px;top:68px;--r:8deg">♥</i></div><h3 style="text-align:center">Pote das decisões</h3><p class="cx-mini">Guardem as possibilidades e deixem o acaso escolher.</p><form data-decision-form><label>Uma ideia<input name="title" required maxlength="160" placeholder="Filme, pizza, passeio…"></label><button>+ Colocar no pote</button></form><div data-decisions></div><button data-draw type="button">✦ Sortear uma decisão</button><div class="cx-result" data-drawn aria-live="polite"></div></div>`);
+const affection=couplePanel('cx-affection','Carinho',`<div class="item"><h3>Quem está por aqui?</h3><label>Seu perfil<select data-role><option value="">Escolher</option><option value="sun">☀ Sol</option><option value="moon">☾ Lua</option></select></label><p data-identity class="cx-mini"></p><div class="cx-love-heart" aria-hidden="true">♥</div><p data-presence class="cx-mini" style="text-align:center"></p></div><div class="item"><h3>Um pouquinho de carinho</h3><div class="cx-stat" data-miss-count>0</div><p style="text-align:center;margin:auto">saudades enviadas</p><div class="cx-love-buttons"><button type="button" data-send="miss">♡ Saudade</button><button type="button" data-send="hug">🫂 Abraço</button><button type="button" data-send="kiss">💋 Beijo</button></div><p data-inbox class="cx-mini" style="margin-top:10px"></p><button type="button" class="ghost" data-read>Marcar carinhos como vistos</button></div><div class="item"><h3>Como você está hoje?</h3><form data-mood-form><label>Seu humor<select name="mood" required><option value="">Escolher…</option><option>😊 Feliz</option><option>🥰 Carinhoso(a)</option><option>😌 Tranquilo(a)</option><option>😴 Cansado(a)</option><option>🥺 Triste</option><option>😟 Preocupado(a)</option></select></label><label>Quer contar algo? (opcional)<textarea name="detail" maxlength="250" rows="2"></textarea></label><button>Guardar meu humor</button></form><div data-moods></div></div><div class="item"><h3>Pergunta romântica do dia</h3><p data-question></p><form data-answer-form><label>Sua resposta<textarea name="answer" required maxlength="500" rows="3"></textarea></label><button>Guardar resposta</button></form><div data-answers></div></div>`);
+const coupons=couplePanel('cx-coupons','Cupons',`<div class="item"><h3>Cupons do amor</h3><p class="cx-mini">Crie um vale para a outra pessoa resgatar. Vale abraço, cinema, jantar ou o que quiserem.</p><form data-coupon-form><label>Nome do cupom<input name="title" required maxlength="100" placeholder="Vale um abraço demorado"></label><label>Detalhes (opcional)<textarea name="detail" maxlength="250" rows="2"></textarea></label><button>Criar cupom ♥</button></form><div data-coupons></div></div>`);
+const whatsapp=couplePanel('cx-whatsapp','WhatsApp',`<div class="item"><h3>Nossos “eu te amo”</h3><p class="cx-mini">Exportem uma conversa sem mídia pelo WhatsApp e selecionem o arquivo .txt. A análise acontece aqui no navegador; o texto não é enviado nem armazenado pelo recurso.</p><form data-wa-form><label>Conversa exportada<input name="chat" type="file" accept=".txt,text/plain" required></label><button>Contar declarações</button></form><div data-wa-result aria-live="polite"></div><button type="button" class="ghost" data-clear-wa>Limpar estatísticas</button><p class="cx-mini">Conta a expressão exata “eu te amo” (sem diferenciar maiúsculas). Uma nova análise substitui a anterior; não soma exportações sobrepostas. O arquivo pode conter apenas parte do histórico.</p></div>`);
+let role=localGet('cx-couple-role','');const roleSelect=affection.querySelector('[data-role]');roleSelect.value=role;const roleLabel=r=>r==='sun'?'☀ Sol':r==='moon'?'☾ Lua':'Perfil não escolhido';const opposite=r=>r==='sun'?'moon':'sun';
+function currentRole(){return settings.compartilhado?(settings.perfis?.[user?.uid]||''):role;}
+function needRole(){const r=currentRole();if(!['sun','moon'].includes(r)){note(settings.compartilhado?'Entre com um dos perfis autorizados.':'Escolha Sol ou Lua na aba Carinho.');return'';}return r;}
+function makeRecord(kind,data,id=uid()){return {id,kind,date:today(),created:Date.now(),updated:Date.now(),...data};}
+async function runTask(button,task){if(button?.disabled)return;if(button)button.disabled=true;try{await task();}catch(e){note(e?.message||'Não foi possível guardar.');}finally{if(button)button.disabled=false;}}
+roleSelect.onchange=()=>{role=roleSelect.value;localSet('cx-couple-role',role);lastBeat=0;renderCouple();heartbeat();};
+const questions=['Qual foi um momento em que você se sentiu muito amado(a) por mim?','Qual pequeno detalhe meu te faz sorrir?','Que lugar você gostaria de visitar comigo?','Qual seria o nosso encontro perfeito?','Qual música te faz lembrar de nós?','O que você mais gostaria de fazer juntos esta semana?','Qual lembrança você guardaria para sempre?','Que coisa simples deixa seu dia melhor?','Qual qualidade você admira em nós?','Qual é um sonho que quer viver comigo?','O que faria você se sentir mais acolhido(a) hoje?','Qual foi uma surpresa nossa que você amou?','Que filme descreve nossa história?','Qual carinho você gostaria de receber hoje?','O que você espera da nossa próxima aventura?','Qual apelido carinhoso você mais gosta?','Qual foi sua primeira impressão de mim?','O que você acha mais engraçado em nós?','Se pudéssemos ir a qualquer lugar agora, qual seria?','Que tradição nossa você quer manter?','Qual presente feito à mão você adoraria ganhar?','Que detalhe do céu lembra a gente?','Qual seria um domingo perfeito juntos?','O que você aprendeu comigo?','Qual é uma coisa que gostaria de me agradecer?','Qual comida te lembra de um encontro nosso?','Que abraço nosso você nunca esquece?','Como você descreveria nosso amor em três palavras?','Qual pequena aventura gostaria de ter amanhã?','O que você gostaria que eu soubesse hoje?','Qual desejo você tem para o nosso próximo mês?'];
+const todayQuestion=()=>questions[Math.floor(Date.parse(today()+'T00:00:00Z')/86400000)%questions.length];
+function renderCouple(){const r=currentRole(),day=today();roleSelect.disabled=!!settings.compartilhado;roleSelect.value=r;affection.querySelector('[data-identity]').textContent=settings.compartilhado?'Identidade definida pela conta autorizada.':'Modo local: escolha seu perfil; não representa login nem sincronização entre celulares.';
+const ds=sorted('decision');decisions.querySelector('[data-decisions]').innerHTML=ds.length?ds.map(x=>`<div class="cx-decision-row"><span>♡ ${esc(x.title)}</span><button type="button" class="ghost" data-remove-decision="${esc(x.id)}">Tirar</button></div>`).join(''):'<p class="cx-mini">O pote está vazio.</p>';decisions.querySelector('[data-draw]').disabled=!ds.length;
+const recent=records.filter(x=>x.kind==='presence'&&Number(x.updated)>Date.now()-95000);const together=!!settings.compartilhado&&['sun','moon'].every(k=>recent.some(x=>x.actor===k));affection.querySelector('.cx-love-heart').classList.toggle('is-together',together);affection.querySelector('[data-presence]').textContent=together?(settings.compartilhado?'Sol e Lua estão aqui juntos!':'Sol e Lua ativos neste navegador.'):(settings.compartilhado?'Aguardando os dois por aqui…':'Presença entre celulares depende da sincronização.');
+const sends=records.filter(x=>x.kind==='affection');affection.querySelector('[data-miss-count]').textContent=sends.filter(x=>x.action==='miss').length;const unseen=sends.filter(x=>x.to===r&&!x.seen);const labels={miss:'saudade',hug:'abraço',kiss:'beijo'};affection.querySelector('[data-inbox]').textContent=!r?'Escolha seu perfil para ver os carinhos.':unseen.length?`${unseen.length} carinho(s) para você: ${unseen.map(x=>labels[x.action]||'carinho').join(', ')}.`:'Nenhum carinho novo para você.';affection.querySelector('[data-read]').disabled=!unseen.length;
+for(const [kind,sel,field] of [['mood','[data-moods]','mood'],['answer','[data-answers]','answer']]){const rows=records.filter(x=>x.kind===kind&&x.date===day);affection.querySelector(sel).innerHTML=rows.map(x=>`<div class="cx-coupon-row"><span><strong>${roleLabel(x.actor)}</strong><p>${esc(x[field])}${x.detail?' · '+esc(x.detail):''}</p></span></div>`).join('')||'<p class="cx-mini">Ainda não há registros de hoje.</p>';}
+affection.querySelector('[data-question]').textContent=todayQuestion();const cs=sorted('coupon');coupons.querySelector('[data-coupons]').innerHTML=cs.length?cs.map(x=>`<div class="cx-coupon-row"><span><strong>${esc(x.title)}</strong><p class="cx-mini">${roleLabel(x.actor)} → ${roleLabel(x.to)}${x.detail?' · '+esc(x.detail):''}</p><p class="cx-mini">${x.redeemed?'✓ Resgatado':'Disponível'}</p></span>${x.redeemed?'':x.to===r?`<button data-redeem="${esc(x.id)}">Resgatar</button>`:x.actor===r?`<button class="ghost" data-cancel-coupon="${esc(x.id)}">Excluir</button>`:''}</div>`).join(''):'<p class="cx-mini">Ainda não há cupons.</p>';}
+function setCoupleForm(panel,sel,task){const f=panel.querySelector(sel);f.onsubmit=e=>{e.preventDefault();runTask(f.querySelector('button'),async()=>{await task(f);f.reset();});};}
+setCoupleForm(decisions,'[data-decision-form]',async f=>{const title=f.elements.title.value.trim();if(!title)throw Error('Escreva uma decisão.');await writeRecord(makeRecord('decision',{title}));note('No pote! ♥');});
+decisions.addEventListener('click',e=>{const b=e.target.closest('[data-remove-decision]');if(b&&confirm('Tirar esta decisão do pote?'))runTask(b,()=>deleteRecord(b.dataset.removeDecision));});
+decisions.querySelector('[data-draw]').onclick=()=>{const rows=sorted('decision');if(!rows.length)return;const jar=decisions.querySelector('.cx-jar'),b=decisions.querySelector('[data-draw]');b.disabled=true;jar.classList.remove('shake');void jar.offsetWidth;jar.classList.add('shake');decisions.querySelector('[data-drawn]').textContent='Sorteando…';setTimeout(()=>{decisions.querySelector('[data-drawn]').textContent=rows[Math.floor(Math.random()*rows.length)].title;jar.classList.remove('shake');b.disabled=false;},reduce()?0:900);};
+affection.addEventListener('click',e=>{const b=e.target.closest('[data-send]');if(b)runTask(b,async()=>{const actor=needRole();if(!actor)return;const action=b.dataset.send;await writeRecord(makeRecord('affection',{actor,to:opposite(actor),action,seen:false}));const el=document.createElement('div');el.className='cx-love-pop';el.textContent={miss:'💗',hug:'🫂',kiss:'💋'}[action];document.body.append(el);setTimeout(()=>el.remove(),1800);note('Carinho guardado! ♥');});});
+affection.querySelector('[data-read]').onclick=e=>runTask(e.target,async()=>{const r=needRole();if(!r)return;for(const x of records.filter(x=>x.kind==='affection'&&x.to===r&&!x.seen))await writeRecord({...x,seen:true,updated:Date.now()});});
+setCoupleForm(affection,'[data-mood-form]',async f=>{const actor=needRole();if(!actor)throw Error('Escolha seu perfil.');const mood=f.elements.mood.value;if(!mood)throw Error('Escolha um humor.');await writeRecord(makeRecord('mood',{actor,mood,detail:f.elements.detail.value.trim()},`mood-${today()}-${actor}`));});
+setCoupleForm(affection,'[data-answer-form]',async f=>{const actor=needRole();if(!actor)throw Error('Escolha seu perfil.');const answer=f.elements.answer.value.trim();if(!answer)throw Error('Escreva uma resposta.');await writeRecord(makeRecord('answer',{actor,answer},`answer-${today()}-${actor}`));});
+setCoupleForm(coupons,'[data-coupon-form]',async f=>{const actor=needRole();if(!actor)throw Error('Escolha seu perfil na aba Carinho.');const title=f.elements.title.value.trim();if(!title)throw Error('Escreva um nome para o cupom.');await writeRecord(makeRecord('coupon',{actor,to:opposite(actor),title,detail:f.elements.detail.value.trim(),redeemed:false}));});
+coupons.addEventListener('click',e=>{const b=e.target.closest('[data-redeem],[data-cancel-coupon]');if(!b)return;runTask(b,async()=>{const x=records.find(x=>x.id===(b.dataset.redeem||b.dataset.cancelCoupon)),actor=needRole();if(!x||!actor||x.redeemed)return;if(b.dataset.redeem&&x.to===actor)await writeRecord({...x,redeemed:true,updated:Date.now()});else if(b.dataset.cancelCoupon&&x.actor===actor&&confirm('Excluir este cupom?'))await deleteRecord(x.id);});});
+let lastBeat=0;async function heartbeat(){const r=currentRole();if(!settings.compartilhado||!r||document.hidden||activeStore==='none'||Date.now()-lastBeat<25000)return;lastBeat=Date.now();try{await writeRecord(makeRecord('presence',{actor:r},'presence-'+r));}catch{}}setInterval(()=>{heartbeat();renderCouple();},30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden){lastBeat=0;heartbeat();}});
+function analyzeWhatsApp(text){const map=new Map();let sender=null,body='',messages=0,total=0;const stamp=/^\s*(?:\[\s*)?\d{1,2}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4}(?:,?\s+)(?:às\s+)?\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AP]M)?\s*(?:\]\s*|\s+-\s+)/i;const flush=()=>{if(!sender)return;messages++;const count=(body.normalize('NFC').match(/(?<![\p{L}\p{N}_])eu\s+te\s+amo(?![\p{L}\p{N}_])/giu)||[]).length;total+=count;map.set(sender,(map.get(sender)||0)+count);};for(const raw of text.split(/\r?\n/)){const line=raw.replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069\ufeff]/g,'');const m=line.match(stamp);if(m){flush();const rest=line.slice(m[0].length),idx=rest.indexOf(': ');sender=idx>0?rest.slice(0,idx).trim():null;body=sender?rest.slice(idx+2):'';}else if(sender)body+='\n'+line;}flush();return {total,messages,people:[...map].sort((a,b)=>b[1]-a[1]),at:Date.now()};}
+function renderWA(){const stats=localGet('cx-wa-stat',null),out=whatsapp.querySelector('[data-wa-result]');out.replaceChildren();if(!stats)return;const n=document.createElement('div');n.className='cx-stat';n.textContent=String(stats.total);const label=document.createElement('p');label.textContent='vezes que escreveram “eu te amo”';label.style.textAlign='center';out.append(n,label);for(const [name,count] of stats.people){const p=document.createElement('p');p.textContent=`${name}: ${count}`;out.append(p);}const p=document.createElement('p');p.className='cx-mini';p.textContent=`${stats.messages} mensagens reconhecidas no arquivo.`;out.append(p);}
+setCoupleForm(whatsapp,'[data-wa-form]',async f=>{const file=f.elements.chat.files[0];if(!file||!file.name.toLowerCase().endsWith('.txt'))throw Error('Selecione um arquivo TXT exportado sem mídia.');if(file.size>40*1024*1024)throw Error('Arquivo acima de 40 MB.');const stats=analyzeWhatsApp(await file.text());if(!stats.messages)throw Error('Não reconheci o formato da conversa. Exporte o chat sem mídia.');localSet('cx-wa-stat',stats);renderWA();});whatsapp.querySelector('[data-clear-wa]').onclick=()=>{localSet('cx-wa-stat',null);renderWA();};renderWA();
+
+function anniversary(day,start){const [y,m,d]=day.split('-').map(Number),[sy,sm,sd]=start.slice(0,10).split('-').map(Number);const months=(y-sy)*12+m-sm;const lastDay=new Date(Date.UTC(y,m,0)).getUTCDate();return months>0&&d===Math.min(sd,lastDay)?months:0;}
+let celebratedSession='';
+function celebrate(){const day=today(),months=anniversary(day,cfg.inicio);if(!months||celebratedSession===day)return;try{if(localStorage.getItem('cx-celebrated')===day)return;}catch{}if(modal)return;celebratedSession=day;try{localStorage.setItem('cx-celebrated',day);}catch{}const title=months%12===0?`${months/12} ${months===12?'ano':'anos'} de nós!`:`${months} ${months===1?'mês':'meses'} de nós!`;const body=openModal(`<div class="cx-celebrate-icon">☀️🖤🌙</div><h2>${esc(title)}</h2><p>Hoje celebramos mais um pedacinho da nossa história. No modo Automático, o nosso céu se transforma em eclipse.</p><p>Mais um pedacinho da nossa história, com amor e muitas lembranças pela frente.</p><div class="cx-modal-actions"><button type="button">Celebrar juntos ♥</button></div>`);body.querySelector('button').onclick=closeModal;if(!reduce())for(let k=0;k<30;k++){const c=document.createElement('span');c.className='cx-confetti';c.setAttribute('aria-hidden','true');c.textContent=['♥','✦','♡','🌸'][k%4];c.style.left=Math.random()*100+'vw';c.style.color=k%2?'var(--rosa)':'var(--ouro)';c.style.animationDelay=Math.random()*.9+'s';document.body.append(c);setTimeout(()=>c.remove(),4700);}}
+const env=byId('env');if(env){const afterOpen=()=>setTimeout(celebrate,1250);env.addEventListener('click',afterOpen,{once:true});env.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')afterOpen();});}else setTimeout(celebrate,500);
+dailyUpdate();themeUpdate();setInterval(()=>{dailyUpdate();themeUpdate();render();if(byId('abertura')?.classList.contains('some'))celebrate();},60000);
+render();
+if(!settings.compartilhado)loadLocal();else{
+ activeStore='none';
+ import('./cantinho-extra.firebase.js').then(async m=>{remote=await m.connect(settings.firebase,async u=>{user=u;generation++;unsubscribe?.();records=[];render();if(!u){activeStore='none';syncStatus('Entrem com suas contas para ver as fotos e memórias compartilhadas.');return;}activeStore='none';syncStatus('Verificando acesso…');unsubscribe=remote.watch(rows=>{activeStore='remote';records=rows;render();heartbeat();syncStatus('Cantinho compartilhado · sincronizado');},()=>{activeStore='none';records=[];render();syncStatus('Sem acesso às memórias. Verifique as regras do Firebase.');});});syncStatus('Entrem com suas contas para sincronizar o cantinho.');}).catch(()=>syncStatus('Não foi possível conectar. Verifique a configuração do Firebase.'));
+}
+})();
+
+</script>
+</body>
+</html>
